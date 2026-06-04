@@ -1,0 +1,23 @@
+{
+  "dataset_name": "gmsc",
+  "source": "Kaggle Give Me Some Credit",
+  "url": "https://www.kaggle.com/c/GiveMeSomeCredit",
+  "target_column": "SeriousDlqin2yrs",
+  "sample_size": 10000,
+  "numerical_features": [
+    "RevolvingUtilizationOfUnsecuredLines",
+    "age",
+    "NumberOfTime30-59DaysPastDueNotWorse",
+    "DebtRatio",
+    "MonthlyIncome",
+    "NumberOfOpenCreditLinesAndLoans",
+    "NumberOfTimes90DaysLate",
+    "NumberRealEstateLoansOrLines",
+    "NumberOfTime60-89DaysPastDueNotWorse",
+    "NumberOfDependents"
+  ],
+  "categorical_features": [],
+  "train_size": 0.7,
+  "test_size": 0.3,
+  "stratify": true
+}

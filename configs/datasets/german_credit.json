@@ -1,0 +1,33 @@
+{
+  "dataset_name": "german_credit",
+  "source": "OpenML credit-g / UCI",
+  "url": "https://www.openml.org/search?type=data&status=active&id=31",
+  "target_column": "class",
+  "numerical_features": [
+    "duration",
+    "credit_amount",
+    "installment_commitment",
+    "residence_since",
+    "age",
+    "existing_credits",
+    "num_dependents"
+  ],
+  "categorical_features": [
+    "checking_status",
+    "credit_history",
+    "purpose",
+    "savings_status",
+    "employment",
+    "personal_status",
+    "other_parties",
+    "property_magnitude",
+    "other_payment_plans",
+    "housing",
+    "job",
+    "own_telephone",
+    "foreign_worker"
+  ],
+  "train_size": 0.7,
+  "test_size": 0.3,
+  "stratify": true
+}

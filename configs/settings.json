@@ -1,0 +1,18 @@
+{
+  "project_name": "shap-synthetic-credit-risk",
+  "seeds_config": "configs/seeds/seeds.json",
+  "naming_convention": "{dataset}_{pipeline}_{model}_seed{seed}_v{version}",
+  "allowed_datasets": ["german_credit", "gmsc_10k"],
+  "allowed_pipelines": ["real", "ctgan", "tvae"],
+  "allowed_models": ["xgboost"],
+  "default_version": "v1",
+  "paths": {
+    "data_raw": "data/raw",
+    "data_processed": "data/processed",
+    "data_synthetic": "data/synthetic",
+    "models": "models",
+    "results": "results",
+    "figures": "figures",
+    "logs": "logs"
+  }
+}
