@@ -51,7 +51,8 @@ def sample_gmsc(input_path="data/raw/cs-training.csv", output_path="data/raw/gms
 def preprocess_german_credit(
     raw_path="data/raw/german_credit.csv",
     processed_dir="data/processed/",
-    model_dir="models/baseline/"
+    model_dir="models/baseline/",
+    seed=42
 ):
     """Preprocesses German Credit dataset: imputation, encoding, scaling, stratified splitting."""
     print("Preprocessing German Credit dataset...")
@@ -66,7 +67,7 @@ def preprocess_german_credit(
     
     # 1. Stratified split (70/30)
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, stratify=y, random_state=42
+        X, y, test_size=0.3, stratify=y, random_state=seed
     )
     
     # Identify numerical and categorical columns
@@ -132,7 +133,8 @@ def preprocess_german_credit(
 def preprocess_gmsc(
     raw_path="data/raw/gmsc_sampled_10k.csv",
     processed_dir="data/processed/",
-    model_dir="models/baseline/"
+    model_dir="models/baseline/",
+    seed=42
 ):
     """Preprocesses GMSC dataset: numerical imputation, scaling, stratified splitting."""
     print("Preprocessing GMSC dataset...")
@@ -147,7 +149,7 @@ def preprocess_gmsc(
     
     # 1. Stratified split (70/30)
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, stratify=y, random_state=42
+        X, y, test_size=0.3, stratify=y, random_state=seed
     )
     
     # 2. Imputation (fit ONLY on train)
