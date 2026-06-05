@@ -216,3 +216,64 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ==========================================
+# Project Specific Ignores
+# ==========================================
+
+# Ignore all datasets except .gitkeep files
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/synthetic/*
+!data/synthetic/.gitkeep
+data/metadata/*
+!data/metadata/.gitkeep
+
+# Ignore baseline, CTGAN, TVAE, and tuned model artifacts except .gitkeep
+models/baseline/*
+!models/baseline/.gitkeep
+models/ctgan/*
+!models/ctgan/.gitkeep
+models/tvae/*
+!models/tvae/.gitkeep
+models/tuned/*
+!models/tuned/.gitkeep
+
+# Ignore experimental results, evaluations, and metrics except .gitkeep
+results/baseline/*
+!results/baseline/.gitkeep
+results/ctgan/*
+!results/ctgan/.gitkeep
+results/tvae/*
+!results/tvae/.gitkeep
+results/shap/*
+!results/shap/.gitkeep
+results/privacy/*
+!results/privacy/.gitkeep
+results/statistics/*
+!results/statistics/.gitkeep
+results/summaries/*
+!results/summaries/.gitkeep
+
+# Ignore generated visualization plots except .gitkeep
+figures/shap/*
+!figures/shap/.gitkeep
+figures/privacy/*
+!figures/privacy/.gitkeep
+figures/performance/*
+!figures/performance/.gitkeep
+figures/paper/*
+!figures/paper/.gitkeep
+
+# Ignore all training, evaluation, and error logs except .gitkeep
+logs/training/*
+!logs/training/.gitkeep
+logs/evaluation/*
+!logs/evaluation/.gitkeep
+logs/errors/*
+!logs/errors/.gitkeep
+
