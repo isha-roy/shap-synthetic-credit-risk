@@ -1,0 +1,265 @@
+\documentclass[journal]{IEEEtran}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{cite}
+
+\begin{document}
+
+\title{Evaluating SHAP Explainability Consistency and Privacy-Utility Tradeoff Across Synthetic Credit Risk Datasets: A Comparative Study of CTGAN and TVAE}
+
+\author{Isha~Roy
+\thanks{I. Roy is with the Department of Computer Science and Engineering, National Institute of Technology Goa, Farmagudi, Ponda, Goa 403401, India (e-mail: isharoy@nitgoa.ac.in).}}
+
+\maketitle
+
+\begin{abstract}
+The deployment of machine learning in high-stakes credit default prediction requires both high predictive accuracy and reliable explainability to comply with modern algorithmic regulatory standards, such as the General Data Protection Regulation (GDPR) and the EU AI Act. Financial institutions are increasingly turning to generative modeling (e.g., CTGAN and TVAE) to produce synthetic datasets to facilitate model development and testing without exposing original user data. However, the degree to which explanation models, specifically SHAP (SHapley Additive exPlanations), remain consistent when trained on fully synthetic data versus real data remains underevaluated. Furthermore, the correlation between explanation fidelity and tabular data privacy spacing is not well understood. In this study, we train downstream XGBoost credit default classifiers across three parallel pipelines: Real Baseline data, CTGAN-generated data, and TVAE-generated data, evaluating them on two public datasets: UCI German Credit and Give Me Some Credit (GMSC). We compare SHAP rank consistency using Spearman rank correlation ($\rho$), while monitoring privacy spacing through Distance to Closest Record (DCR), Nearest Neighbor Distance Ratio (NNDR), and distance-based Membership Inference Attacks (MIA). Across multiple random seeds, our results indicate a distinct explainability-utility-privacy tradeoff. While TVAE consistently provides superior utility and explainability consistency compared to CTGAN, its generated records lie significantly closer to the real records, increasing disclosure risks. Conversely, CTGAN produces fuzzier records that maximize privacy but suffer from degraded predictive utility and explainability fidelity. Finally, we discuss how the sample size bounds Wilcoxon signed-rank test p-values and present Cohen's d effect sizes as a necessary discriminator to confirm statistical effect sizes.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Synthetic Data, Tabular Privacy, Explainable AI, SHAP Consistency, Credit Risk, CTGAN, TVAE, XGBoost.
+\end{IEEEkeywords}
+
+\section{Introduction}
+\label{sec:introduction}
+\IEEEpaperstart{T}{he} integration of automated machine learning (ML) systems within credit scoring and risk management has dramatically increased prediction accuracy. However, credit decision-making is a highly regulated domain. Regulatory frameworks such as the General Data Protection Regulation (GDPR) Article 22 (governing automated decision-making and the ``right to explanation'') and the EU AI Act mandate that automated financial decisions must be auditable, transparent, and fair. Explainable Artificial Intelligence (XAI), particularly feature attribution frameworks like SHAP (SHapley Additive exPlanations), has become the industry standard for auditing predictions.
+
+Simultaneously, privacy regulations limit the sharing and centralization of consumer financial records. To mitigate privacy risks, financial institutions use synthetic tabular data generation, where generative models like Conditional Tabular GAN (CTGAN) and Tabular Variational Autoencoder (TVAE) learn the joint probability distribution of the original dataset and sample new, realistic records. Synthetic data is widely used to share credit scoring datasets with third parties or validation teams without leaking original records.
+
+However, a critical research gap exists: while synthetic data's capability to replicate classification utility (AUC) and statistical feature distributions is extensively evaluated, the consistency of explainability has been largely ignored. If an XGBoost credit scoring model trained on synthetic data generates feature attributions that diverge significantly from a model trained on real data, model governance is undermined. A bank cannot confidently validate or debug models in a synthetic environment if the features' perceived importance shifts.
+
+Furthermore, a three-way tradeoff exists between downstream model utility, explanation consistency (fidelity), and tabular data privacy spacing. Generative models that fit the training distribution too tightly may output synthetic samples that are nearly identical to the original records. This guarantees high utility and explainability consistency but leads to low Distance to Closest Record (DCR) and Nearest Neighbor Distance Ratio (NNDR), creating memorization risks and susceptibility to Membership Inference Attacks (MIA). 
+
+This paper presents a rigorous, multi-seed comparative study of CTGAN and TVAE across two credit risk datasets. We analyze:
+\begin{enumerate}
+    \item Downstream predictive utility (XGBoost classification ROC-AUC and F1-Score).
+    \item SHAP explainability consistency (Spearman rank correlation $\rho$ of attributions).
+    \item Data memorization and inference risk (DCR, NNDR, and distance-based MIA AUC).
+    \item Statistical significance of these differences using paired Wilcoxon signed-rank tests and Cohen's d effect sizes.
+\end{enumerate}
+
+The remainder of this paper is structured as follows. Section \ref{sec:related_work} reviews related work. Section \ref{sec:methodology} describes the three-pipeline evaluation methodology and metrics. Section \ref{sec:experimental_setup} outlines the datasets and parameters. Section \ref{sec:results} presents experimental findings, visual plots, and LaTeX summaries. Section \ref{sec:discussion} discusses the regulatory and governance implications, and Section \ref{sec:conclusion} concludes.
+
+\section{Related Work}
+\label{sec:related_work}
+Prior literature on synthetic tabular credit scoring primarily falls into three disjoint categories:
+\begin{enumerate}
+    \item \textit{Oversampling and Imbalance Correction}: Works such as Han et al. \cite{han2024non} utilize generative models (e.g., conditional Wasserstein GANs) as an oversampling technique to correct minority class default imbalances. These studies show improved downstream AUC but treat SHAP as a secondary, qualitative analysis tool and do not evaluate privacy spacing or full synthetic training.
+    \item \textit{Tabular Privacy Evaluations}: Studies like Min and Oh \cite{min2025can} perform exhaustive privacy analysis of synthetic datasets using distance metrics and membership inference risk. However, they evaluate these metrics directly on raw synthetic data and omit training downstream classifiers or performing explainability audits.
+    \item \textit{Explainability Stability}: Prior research on XAI stability focuses on SHAP sensitivity across model seeds or hyperparameter settings but does not investigate how training on synthetic data alters feature rankings relative to real data.
+\end{enumerate}
+
+To the best of our knowledge, no study jointly evaluates predictive utility, SHAP explanation consistency, and multi-metric privacy spacing for CTGAN and TVAE credit risk pipelines.
+
+\section{Methodology}
+\label{sec:methodology}
+We propose a three-pipeline evaluation framework:
+\begin{itemize}
+    \item \textbf{Pipeline 1: Real Baseline}: XGBoost is trained on real training data $D_{train}$. Feature attributions and rankings are extracted from the real test split $D_{test}$.
+    \item \textbf{Pipeline 2: CTGAN}: A CTGAN synthesizer is fitted on $D_{train}$, and synthetic dataset $D_{ctgan}$ is sampled. An XGBoost model is trained on $D_{ctgan}$ and evaluated on $D_{test}$.
+    \item \textbf{Pipeline 3: TVAE}: A TVAE synthesizer is fitted on $D_{train}$, producing $D_{tvae}$. An XGBoost model is trained on $D_{tvae}$ and evaluated on $D_{test}$.
+\end{itemize}
+
+\subsection{Preprocessing}
+To prevent data leakage, preprocessing parameters are fit strictly on the original training split $D_{train}$ and applied to test and synthetic sets:
+\begin{itemize}
+    \item Numerical features are imputed using training medians and standardized via Z-score scaling.
+    \item Categorical features are imputed using training modes and mapped to integers using scikit-learn's \texttt{LabelEncoder}.
+\end{itemize}
+
+\subsection{SHAP consistency}
+SHAP values represent a feature's contribution to the difference between the model output and the expected model output. For a given seed, let $S_{real} \in \mathbb{R}^{M \times F}$ be the SHAP attribution matrix on test data $D_{test}$ (with $M$ samples and $F$ features) for the real-trained model. Let $S_{syn} \in \mathbb{R}^{M \times F}$ be the attribution matrix for the synthetic-trained model. We calculate:
+\begin{enumerate}
+    \item The mean absolute attribution vector for each feature:
+    \begin{equation}
+        \bar{s}_j = \frac{1}{M}\sum_{i=1}^M |S_{i, j}|
+    \end{equation}
+    \item The Spearman rank correlation coefficient ($\rho$) between the real and synthetic mean absolute attribution vectors.
+    \item The Jaccard overlap count for the top 5 and top 10 features.
+\end{enumerate}
+
+\subsection{Privacy Metrics}
+Let $X_{syn} \in \mathbb{R}^{N \times F}$ and $X_{train} \in \mathbb{R}^{K \times F}$ represent preprocessed synthetic and real training features, respectively.
+\begin{enumerate}
+    \item \textbf{Distance to Closest Record (DCR)}: Measures the Euclidean distance from each synthetic record to its nearest neighbor in the real training set:
+    \begin{equation}
+        \text{DCR}(x_i) = \min_{y_j \in X_{train}} \|x_i - y_j\|_2
+    \end{equation}
+    \item \textbf{Nearest Neighbor Distance Ratio (NNDR)}: Measures the ratio of the distance to the nearest neighbor ($d_1$) versus the second-nearest neighbor ($d_2$):
+    \begin{equation}
+        \text{NNDR}(x_i) = \frac{d_1(x_i)}{d_2(x_i)} = \frac{\min_{y_j \in X_{train}} \|x_i - y_j\|_2}{\min^{(2)}_{y_j \in X_{train}} \|x_i - y_j\|_2}
+    \end{equation}
+    An NNDR close to 0 indicates severe memorization, as the synthetic record is much closer to one specific real record than to the rest of the dataset.
+    \item \textbf{Membership Inference Attack (MIA)}: Distance-based MIA calculates the nearest distance of both real training records (members, $y \in X_{train}$) and test records (non-members, $z \in X_{test}$) to the synthetic set $X_{syn}$. Under the score $-d(y, X_{syn})$, we evaluate the attack ROC-AUC. An AUC of 0.5 indicates perfect privacy (random guessing), while 1.0 represents complete membership disclosure.
+\end{enumerate}
+
+\subsection{Statistical Validation}
+To evaluate robustness, we run all experiments across 5 seeds: $42, 123, 456, 789, 1337$, reporting the mean and standard deviation. We compute:
+\begin{enumerate}
+    \item \textbf{Bootstrap Confidence Intervals}: We draw $B=1000$ bootstrap samples to calculate 95\% confidence intervals for downstream utility and SHAP correlation.
+    \item \textbf{Wilcoxon Signed-Rank Test}: A non-parametric paired test comparing metrics (AUC, DCR, SHAP $\rho$) across seeds.
+    \item \textbf{Paired Cohen's d}: Measures the standardized difference:
+    \begin{equation}
+        d = \frac{\mu_{diff}}{\sigma_{diff}}
+    \end{equation}
+    which acts as the primary discriminator given Wilcoxon's mathematical constraints under low sample sizes.
+\end{enumerate}
+
+\section{Experimental Setup}
+\label{sec:experimental_setup}
+
+\subsection{Datasets}
+We utilize two distinct datasets:
+\begin{enumerate}
+    \item \textbf{UCI German Credit}: Contains 1,000 records with 20 features (7 numerical, 13 categorical) and a binary target `class` (`good`/`bad`). It exhibits a 70/30 class imbalance.
+    \item \textbf{Give Me Some Credit (GMSC)}: Raw dataset contains 150,000 records. We draw a stratified 10,000-row sample containing 10 numerical features and target `SeriousDlqin2yrs` (positive default ratio ~6.69\%).
+\end{enumerate}
+
+\subsection{Model Specifications}
+* **XGBoost**: Tuned via GridSearchCV (5-fold CV) on the first seed.
+  * *German Credit*: \texttt{learning\_rate=0.05}, \texttt{max\_depth=5}, \texttt{n\_estimators=100}.
+  * *GMSC*: \texttt{learning\_rate=0.01}, \texttt{max\_depth=3}, \texttt{n\_estimators=300}.
+  * Class imbalance is addressed dynamically using \texttt{scale\_pos\_weight = neg\_count/pos\_count}.
+* **Generators**: Fitted via SDV for 300 epochs.
+  * *CTGAN*: Batch size 500, generator/discriminator dimensions (256, 256).
+  * *TVAE*: Batch size 500, compression/decompression dimensions (128, 128).
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Dataset Statistics}
+Table \ref{tab:dataset_stats} summarizes the characteristics of the evaluation datasets.
+
+\input{results/summaries/dataset_statistics_table.tex}
+
+\subsection{Predictive Performance and Utility}
+Table \ref{tab:utility_comparison} aggregates XGBoost classification performance evaluated on the real test split.
+
+\input{results/summaries/utility_comparison_table.tex}
+
+As shown, TVAE retains significantly higher classification utility than CTGAN. On the low-sample, mixed-type German Credit dataset, CTGAN-trained classifiers fail completely, predicting near random chance (AUC ~0.49), while TVAE achieves a reasonable utility of ~0.69 (compared to Real Baseline's ~0.77). On the larger GMSC dataset, both generators capture the joint distributions well, achieving ROC-AUC values (~0.78 for CTGAN, ~0.79 for TVAE) close to the real baseline (0.84).
+
+\subsection{Fidelity and Privacy spacing}
+Table \ref{tab:privacy_explainability_comparison} compiles SHAP explanation consistency and privacy metrics.
+
+\input{results/summaries/privacy_consistency_comparison_table.tex}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{figures/paper/german_credit_utility_privacy_tradeoff.png}
+\caption{Utility-Privacy Tradeoff: Downstream ROC-AUC vs. Mean DCR (German Credit).}
+\label{fig:german_tradeoff}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{figures/paper/gmsc_utility_privacy_tradeoff.png}
+\caption{Utility-Privacy Tradeoff: Downstream ROC-AUC vs. Mean DCR (GMSC).}
+\label{fig:gmsc_tradeoff}
+\end{figure}
+
+The tradeoffs are plotted in Figs. \ref{fig:german_tradeoff} and \ref{fig:gmsc_tradeoff}. In both datasets, a clear boundary is visible. TVAE produces records that lie much closer to the real records (lower DCR and NNDR values), allowing downstream models to replicate the real distribution and feature importances. However, this proximity represents a higher risk of record leakage. Conversely, CTGAN produces records with higher DCR and NNDR values, establishing a larger privacy margin at the cost of utility.
+
+\subsection{SHAP Consistency Analysis}
+We display the rank consistency in Figs. \ref{fig:german_consistency} and \ref{fig:gmsc_consistency}.
+For GMSC, although CTGAN and TVAE have comparable predictive utility (0.78 vs. 0.79 AUC), their explainability consistency differs dramatically. TVAE maintains moderate ranking consistency ($\rho \approx 0.57$), whereas CTGAN attributions diverge significantly ($\rho \approx 0.28$, weak consistency). This provides empirical proof of the decoupling of downstream classification utility and explanation fidelity.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/paper/german_credit_shap_consistency.png}
+\caption{SHAP Rank Spearman Correlation Comparison (German Credit).}
+\label{fig:german_consistency}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/paper/gmsc_shap_consistency.png}
+\caption{SHAP Rank Spearman Correlation Comparison (GMSC).}
+\label{fig:gmsc_consistency}
+\end{figure}
+
+Figs. \ref{fig:german_heatmap} and \ref{fig:gmsc_heatmap} present heatmaps of average feature rankings.
+For GMSC, features like \texttt{RevolvingUtilizationOfUnsecuredLines} and \texttt{DebtRatio} remain highly ranked across all models, but mid-ranked features show severe position swaps in CTGAN. For German Credit, the top feature \texttt{checking\_status} is preserved as the most important across all pipelines.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{figures/paper/german_credit_shap_heatmap.png}
+\caption{SHAP Feature Rank Comparison Heatmap (German Credit).}
+\label{fig:german_heatmap}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{figures/paper/gmsc_shap_heatmap.png}
+\caption{SHAP Feature Rank Comparison Heatmap (GMSC).}
+\label{fig:gmsc_heatmap}
+\end{figure}
+
+\subsection{ROC Curves and MIA Evaluations}
+Figs. \ref{fig:german_roc} and \ref{fig:gmsc_roc} show downstream model ROC curves on the test set for Seed 42.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/paper/german_credit_roc_curve.png}
+\caption{Classifier ROC Curves (German Credit - Seed 42).}
+\label{fig:german_roc}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/paper/gmsc_roc_curve.png}
+\caption{Classifier ROC Curves (GMSC - Seed 42).}
+\label{fig:gmsc_roc}
+\end{figure}
+
+Finally, Figs. \ref{fig:german_mia} and \ref{fig:gmsc_mia} display the ROC curves of Membership Inference Attacks. In all settings, the MIA ROC curve hovers near the diagonal baseline (AUC $\approx 0.50$). This indicates that distance-based MIA cannot distinguish between members and non-members, confirming that neither generator is highly vulnerable to identity leakage through simple distance queries.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/paper/german_credit_mia_roc_curve.png}
+\caption{MIA ROC Curves (German Credit - Seed 42).}
+\label{fig:german_mia}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/paper/gmsc_mia_roc_curve.png}
+\caption{MIA ROC Curves (GMSC - Seed 42).}
+\label{fig:gmsc_mia}
+\end{figure}
+
+\subsection{Statistical Rigor Analysis}
+The Wilcoxon signed-rank test comparing TVAE and CTGAN AUC on German Credit yields a p-value of $0.0625$. For $N=5$ seeds, the minimum possible p-value for a two-sided test is mathematically bounded at:
+\begin{equation}
+    p_{min} = \frac{1}{2^{N-1}} = \frac{1}{2^4} = 0.0625
+\end{equation}
+This means that even if TVAE outperforms CTGAN in every single seed, the Wilcoxon test can never return a p-value below 0.05. To confirm the robustness of the utility improvement, we compute a paired Cohen's d of **4.5336**, indicating an extremely large, positive effect size. Similarly, for GMSC SHAP consistency, TVAE outperforms CTGAN with a p-value of $0.0625$ and a large effect size of **1.2284**. Conversely, TVAE has lower DCR than CTGAN by an extremely large effect size ($-30.6565$ for German Credit, $-8.7478$ for GMSC), statistically validating the tradeoff.
+
+\section{Discussion and Limitations}
+\label{sec:discussion}
+These results have critical governance implications for financial institutions. If a bank utilizes CTGAN to share synthetic data for model validation or debugging, the resulting models will use substantially shifted feature importances, rendering validation findings questionable. For explainable credit scoring pipelines, TVAE is the preferred generator due to its superior rank consistency. However, because TVAE records lie closer to real records, institutions must add differential privacy (DP) guarantees to mitigate disclosure risk.
+
+The study has some limitations:
+\begin{itemize}
+    \item Evaluations are conducted under CPU-only constraints, limiting the size of evaluated datasets.
+    \item Downstream models are restricted to tree-based ensemble classifiers (XGBoost), and results may vary for deep learning models.
+    \item The sample size of 5 seeds limits non-parametric statistical significance tests, necessitating standardized effect sizes (Cohen's d).
+\end{itemize}
+
+\section{Conclusion}
+\label{sec:conclusion}
+We performed a multi-seed comparative study of CTGAN and TVAE credit risk modeling pipelines, jointly evaluating predictive utility, SHAP consistency, and privacy spacing. We demonstrated that TVAE offers superior downstream utility and explainability consistency, but compromises on privacy margins by outputting records closer to the original training data. Furthermore, we demonstrated the utility-explainability decoupling on continuous data, where TVAE and CTGAN achieve similar predictive utility but TVAE provides significantly more consistent feature attributions. Future work will investigate integrating differential privacy within TVAE training to balance explainability, utility, and disclosure risk.
+
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{10}
+\bibitem{han2024non}
+D.~Han, Y.~Wang, and H.~Zhang, ``Non-parametric oversampling technique for explainable credit scoring,'' \emph{Scientific Reports}, vol.~14, no.~1, p. 1024, 2024.
+\bibitem{min2025can}
+J.~Min and S.~Oh, ``Can synthetic data protect privacy?'' \emph{IEEE Access}, vol.~13, pp. 10450--10462, 2025.
+\end{thebibliography}
+
+\end{document}
