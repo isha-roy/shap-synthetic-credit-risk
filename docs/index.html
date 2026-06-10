@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SHAP Synthetic Credit Risk â€” Research Report</title>
+  <title>SHAP Synthetic Credit Risk — Research Report</title>
   <meta name="description" content="Evaluating SHAP Explainability Consistency and Privacy-Utility Tradeoff Across Synthetic Credit Risk Datasets: A Comparative Study of CTGAN and TVAE">
   <meta name="author" content="Isha Roy">
   <link rel="stylesheet" href="styles.css">
@@ -35,10 +35,10 @@
 </nav>
 
 <!-- Mobile TOC toggle -->
-<button class="toc-toggle" id="tocToggle" aria-label="Toggle navigation">â˜°</button>
+<button class="toc-toggle" id="tocToggle" aria-label="Toggle navigation">☰</button>
 
 <!-- Back to top -->
-<button class="back-to-top" id="backToTop" aria-label="Back to top">â†‘</button>
+<button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
 
 <!-- ===== MAIN CONTENT ===== -->
 <div class="page-wrapper">
@@ -48,12 +48,12 @@
     <header class="hero">
       <div class="hero-badge">ðŸŽ“ IEEE Access Submission</div>
       <h1>Evaluating SHAP Explainability Consistency and Privacy-Utility Tradeoff Across Synthetic Credit Risk Datasets</h1>
-      <p class="hero-subtitle">A Comparative Study of CTGAN and TVAE â€” bridging the gap between synthetic data utility, model explainability, and privacy guarantees in regulated credit scoring.</p>
+      <p class="hero-subtitle">A Comparative Study of CTGAN and TVAE — bridging the gap between synthetic data utility, model explainability, and privacy guarantees in regulated credit scoring.</p>
       <div class="hero-meta">
         <span class="hero-meta-item"><strong>Author:</strong> Isha Roy</span>
         <span class="hero-meta-item"><strong>Affiliation:</strong> NIT Goa, Dept. of CSE</span>
         <span class="hero-meta-item"><strong>Pipelines:</strong> 3 (Real, CTGAN, TVAE)</span>
-        <span class="hero-meta-item"><strong>Seeds:</strong> 5 (42, 123, 456, 789, 1337)</span>
+        <span class="hero-meta-item"><strong>Seeds:</strong> 10 (42, 123, 456, 789, 1337, 2024, 7, 99, 314, 2718)</span>
       </div>
     </header>
 
@@ -67,14 +67,14 @@
         </div>
         <p>Banks use machine learning models to decide who gets a loan. These models need to be:</p>
         <ul>
-          <li><strong>Accurate</strong> â€” they should correctly predict who will default.</li>
-          <li><strong>Explainable</strong> â€” regulators (GDPR, EU AI Act) require banks to explain <em>why</em> a loan was denied.</li>
-          <li><strong>Private</strong> â€” real customer data cannot be shared freely for model development.</li>
+          <li><strong>Accurate</strong> — they should correctly predict who will default.</li>
+          <li><strong>Explainable</strong> — regulators (GDPR, EU AI Act) require banks to explain <em>why</em> a loan was denied.</li>
+          <li><strong>Private</strong> — real customer data cannot be shared freely for model development.</li>
         </ul>
-        <p>To solve the privacy problem, banks generate <strong>synthetic data</strong> â€” fake customer records that look statistically similar to real ones. Two popular methods are:</p>
+        <p>To solve the privacy problem, banks generate <strong>synthetic data</strong> — fake customer records that look statistically similar to real ones. Two popular methods are:</p>
         <ul>
-          <li><strong>CTGAN</strong> (Conditional Tabular GAN) â€” uses adversarial training.</li>
-          <li><strong>TVAE</strong> (Tabular Variational Autoencoder) â€” uses variational inference.</li>
+          <li><strong>CTGAN</strong> (Conditional Tabular GAN) — uses adversarial training.</li>
+          <li><strong>TVAE</strong> (Tabular Variational Autoencoder) — uses variational inference.</li>
         </ul>
         <blockquote>If you train a credit scoring model on synthetic data instead of real data, do you get the same predictions AND the same explanations? And does the synthetic data actually protect privacy, or does it accidentally leak real customer information?</blockquote>
         <p>We answer this by building <strong>three parallel pipelines</strong> and comparing them head-to-head:</p>
@@ -97,7 +97,7 @@
             <thead><tr><th>Stakeholder</th><th>Why They Care</th></tr></thead>
             <tbody>
               <tr><td><strong>Banks &amp; Fintech</strong></td><td>Need to know if synthetic data is safe to share with third-party auditors</td></tr>
-              <tr><td><strong>Regulators</strong></td><td>GDPR Article 22 requires explainable credit decisions â€” synthetic training must preserve explanations</td></tr>
+              <tr><td><strong>Regulators</strong></td><td>GDPR Article 22 requires explainable credit decisions — synthetic training must preserve explanations</td></tr>
               <tr><td><strong>ML Engineers</strong></td><td>Need practical guidance on which generator to use and what privacy checks to run</td></tr>
               <tr><td><strong>Researchers</strong></td><td>No prior study jointly evaluates utility + explainability + privacy for synthetic credit data</td></tr>
             </tbody>
@@ -119,7 +119,7 @@
           <p><strong>What they missed:</strong></p>
           <ul>
             <li>Only used GANs for oversampling (minority class), not full synthetic replacement.</li>
-            <li>Treated SHAP as a secondary visualization tool â€” never measured whether rankings <em>change</em>.</li>
+            <li>Treated SHAP as a secondary visualization tool — never measured whether rankings <em>change</em>.</li>
             <li>Did not evaluate any privacy metrics at all.</li>
           </ul>
         </div>
@@ -130,7 +130,7 @@
           <p><strong>What they did:</strong> Performed deep privacy evaluation using DCR, NNDR, MIA, and the Inference Risk Indicator across multiple generators.</p>
           <p><strong>What they missed:</strong></p>
           <ul>
-            <li>Evaluated privacy metrics directly on raw synthetic data â€” never trained a downstream classifier.</li>
+            <li>Evaluated privacy metrics directly on raw synthetic data — never trained a downstream classifier.</li>
             <li>Never used SHAP or any explainability method.</li>
             <li>Never asked: "If you use this data to train a model, does the model still work?"</li>
           </ul>
@@ -191,35 +191,35 @@
         </div>
         <div class="pipeline-steps">
           <div class="pipeline-step">
-            <h4>Phase 0 â€” Data Acquisition &amp; Splitting</h4>
+            <h4>Phase 0 — Data Acquisition &amp; Splitting</h4>
             <p>Download datasets. For each of 10 seeds, create a fresh stratified 70/30 train/test split. Ensures robustness across splits.</p>
           </div>
           <div class="pipeline-step">
-            <h4>Phase 1 â€” Preprocessing (Leakage-Safe)</h4>
+            <h4>Phase 1 — Preprocessing (Leakage-Safe)</h4>
             <p>All transformers fit <strong>only on training split</strong>. Numerical: median imputation + Z-score. Categorical: mode imputation + label encoding. Prevents data leakage.</p>
           </div>
           <div class="pipeline-step">
-            <h4>Phase 2 â€” Synthetic Data Generation</h4>
+            <h4>Phase 2 — Synthetic Data Generation</h4>
             <p>Train CTGAN (300 epochs, dims 256Ã—256) and TVAE (300 epochs, dims 128Ã—128, latent 128) on preprocessed training data. Generate same count as training set.</p>
           </div>
           <div class="pipeline-step">
-            <h4>Phase 3 â€” Downstream Classification (XGBoost)</h4>
+            <h4>Phase 3 — Downstream Classification (XGBoost)</h4>
             <p>Three XGBoost models per seed: Real, CTGAN, TVAE. All evaluated on same real test split. Report ROC-AUC and F1-Score.</p>
           </div>
           <div class="pipeline-step">
-            <h4>Phase 4 â€” SHAP Explainability Audit</h4>
+            <h4>Phase 4 — SHAP Explainability Audit</h4>
             <p>TreeSHAP on real test set for all models. Compare feature importance rankings via Spearman Ï and Jaccard overlap (Top-5, Top-10).</p>
           </div>
           <div class="pipeline-step">
-            <h4>Phase 5 â€” Privacy Evaluation (DCR, NNDR, MIA)</h4>
+            <h4>Phase 5 — Privacy Evaluation (DCR, NNDR, MIA)</h4>
             <p>Distance-based metrics in preprocessed feature space. DCR = how far synthetic points sit from real. NNDR = local memorization check. MIA = membership inference AUC.</p>
           </div>
           <div class="pipeline-step">
-            <h4>Phase 6 â€” Inference Risk Indicator (New)</h4>
+            <h4>Phase 6 — Inference Risk Indicator (New)</h4>
             <p>From Min &amp; Oh (2025). For each synthetic point: is it closer to a real point than that real point's own nearest neighbor? 50-split permutation baseline for threshold.</p>
           </div>
           <div class="pipeline-step">
-            <h4>Phase 7 â€” Statistical Validation</h4>
+            <h4>Phase 7 — Statistical Validation</h4>
             <p>Wilcoxon signed-rank test + Cohen's d effect size + Bootstrap 95% CIs. Primary discriminator: effect size (p-value = 0.002 achievable with N=10).</p>
           </div>
         </div>
@@ -233,41 +233,41 @@
         </div>
         <h3>German Credit</h3>
         <div class="comparison-grid">
-          <div class="stat-card"><div class="stat-value blue">0.7715</div><div class="stat-label">Real Baseline AUC</div></div>
-          <div class="stat-card"><div class="stat-value purple">0.6946</div><div class="stat-label">TVAE AUC</div></div>
-          <div class="stat-card"><div class="stat-value rose">0.4946</div><div class="stat-label">CTGAN AUC</div></div>
-          <div class="stat-card"><div class="stat-value amber">0.5825</div><div class="stat-label">Real Baseline F1</div></div>
+          <div class="stat-card"><div class="stat-value blue">0.7716</div><div class="stat-label">Real Baseline AUC</div></div>
+          <div class="stat-card"><div class="stat-value purple">0.6864</div><div class="stat-label">TVAE AUC</div></div>
+          <div class="stat-card"><div class="stat-value rose">0.4851</div><div class="stat-label">CTGAN AUC</div></div>
+          <div class="stat-card"><div class="stat-value amber">0.5872</div><div class="stat-label">Real Baseline F1</div></div>
         </div>
 
         <h3>GMSC</h3>
         <div class="comparison-grid">
-          <div class="stat-card"><div class="stat-value blue">0.8362</div><div class="stat-label">Real Baseline AUC</div></div>
-          <div class="stat-card"><div class="stat-value purple">0.7853</div><div class="stat-label">TVAE AUC</div></div>
-          <div class="stat-card"><div class="stat-value rose">0.7778</div><div class="stat-label">CTGAN AUC</div></div>
-          <div class="stat-card"><div class="stat-value amber">0.3105</div><div class="stat-label">Real Baseline F1</div></div>
+          <div class="stat-card"><div class="stat-value blue">0.8357</div><div class="stat-label">Real Baseline AUC</div></div>
+          <div class="stat-card"><div class="stat-value purple">0.7531</div><div class="stat-label">TVAE AUC</div></div>
+          <div class="stat-card"><div class="stat-value rose">0.7850</div><div class="stat-label">CTGAN AUC</div></div>
+          <div class="stat-card"><div class="stat-value amber">0.3024</div><div class="stat-label">Real Baseline F1</div></div>
         </div>
 
         <div class="table-wrapper">
           <table>
-            <thead><tr><th>Dataset</th><th>Model</th><th>AUC (Mean Â± Std)</th><th>95% CI</th><th>F1 (Mean Â± Std)</th><th>95% CI</th></tr></thead>
+            <thead><tr><th>Dataset</th><th>Model</th><th>AUC (Mean &plusmn; Std)</th><th>95% CI</th><th>F1 (Mean &plusmn; Std)</th><th>95% CI</th></tr></thead>
             <tbody>
-              <tr><td>German</td><td><strong>Real</strong></td><td>0.7715 Â± 0.0172</td><td>[0.757, 0.787]</td><td>0.5825 Â± 0.0202</td><td>[0.567, 0.600]</td></tr>
-              <tr><td>German</td><td>CTGAN</td><td>0.4946 Â± 0.0333</td><td>[0.468, 0.527]</td><td>0.3145 Â± 0.0550</td><td>[0.266, 0.363]</td></tr>
-              <tr><td>German</td><td>TVAE</td><td>0.6946 Â± 0.0181</td><td>[0.681, 0.712]</td><td>0.3676 Â± 0.0955</td><td>[0.282, 0.456]</td></tr>
-              <tr><td>GMSC</td><td><strong>Real</strong></td><td>0.8362 Â± 0.0175</td><td>[0.820, 0.850]</td><td>0.3105 Â± 0.0146</td><td>[0.299, 0.325]</td></tr>
-              <tr><td>GMSC</td><td>CTGAN</td><td>0.7778 Â± 0.0339</td><td>[0.744, 0.807]</td><td>0.3067 Â± 0.0416</td><td>[0.271, 0.343]</td></tr>
-              <tr><td>GMSC</td><td>TVAE</td><td>0.7853 Â± 0.0325</td><td>[0.758, 0.814]</td><td>0.3334 Â± 0.0451</td><td>[0.293, 0.371]</td></tr>
+              <tr><td>German</td><td><strong>Real</strong></td><td>0.7716 &plusmn; 0.0194</td><td>[0.760, 0.785]</td><td>0.5872 &plusmn; 0.0232</td><td>[0.573, 0.603]</td></tr>
+              <tr><td>German</td><td>CTGAN</td><td>0.4851 &plusmn; 0.0410</td><td>[0.460, 0.510]</td><td>0.3146 &plusmn; 0.0493</td><td>[0.284, 0.347]</td></tr>
+              <tr><td>German</td><td>TVAE</td><td>0.6864 &plusmn; 0.0218</td><td>[0.672, 0.700]</td><td>0.4074 &plusmn; 0.0878</td><td>[0.350, 0.463]</td></tr>
+              <tr><td>GMSC</td><td><strong>Real</strong></td><td>0.8357 &plusmn; 0.0134</td><td>[0.826, 0.844]</td><td>0.3024 &plusmn; 0.0145</td><td>[0.294, 0.312]</td></tr>
+              <tr><td>GMSC</td><td>CTGAN</td><td>0.7850 &plusmn; 0.0327</td><td>[0.764, 0.806]</td><td>0.3157 &plusmn; 0.0365</td><td>[0.292, 0.337]</td></tr>
+              <tr><td>GMSC</td><td>TVAE</td><td>0.7531 &plusmn; 0.1284</td><td>[0.666, 0.811]</td><td>0.3166 &plusmn; 0.0825</td><td>[0.263, 0.359]</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="figure">
           <img src="assets/german_credit_roc_curve.png" alt="German Credit ROC Curves">
-          <div class="figure-caption"><strong>Figure:</strong> ROC curves for German Credit â€” Real vs CTGAN vs TVAE (seed 42)</div>
+          <div class="figure-caption"><strong>Figure:</strong> ROC curves for German Credit — Real vs CTGAN vs TVAE (seed 42)</div>
         </div>
         <div class="figure">
           <img src="assets/gmsc_roc_curve.png" alt="GMSC ROC Curves">
-          <div class="figure-caption"><strong>Figure:</strong> ROC curves for GMSC â€” Real vs CTGAN vs TVAE (seed 42)</div>
+          <div class="figure-caption"><strong>Figure:</strong> ROC curves for GMSC — Real vs CTGAN vs TVAE (seed 42)</div>
         </div>
 
         <p><strong>Key takeaway:</strong> On German Credit, CTGAN completely fails (AUC ~0.49 = random). TVAE retains decent utility. On GMSC, both perform reasonably. <strong>TVAE consistently outperforms CTGAN</strong> in downstream utility.</p>
@@ -283,12 +283,12 @@
         <h3>Spearman Rank Correlation (Ï)</h3>
         <div class="table-wrapper">
           <table>
-            <thead><tr><th>Dataset</th><th>Generator</th><th>SHAP Ï (Mean Â± Std)</th></tr></thead>
+            <thead><tr><th>Dataset</th><th>Generator</th><th>SHAP Ï (Mean &plusmn; Std)</th></tr></thead>
             <tbody>
-              <tr><td>German Credit</td><td>CTGAN</td><td>0.6072 Â± 0.1193</td></tr>
-              <tr><td>German Credit</td><td>TVAE</td><td>0.6224 Â± 0.0496</td></tr>
-              <tr><td>GMSC</td><td>CTGAN</td><td>0.2848 Â± 0.1857</td></tr>
-              <tr><td>GMSC</td><td>TVAE</td><td>0.5661 Â± 0.0831</td></tr>
+              <tr><td>German Credit</td><td>CTGAN</td><td>0.5501 &plusmn; 0.1382</td></tr>
+              <tr><td>German Credit</td><td>TVAE</td><td>0.5961 &plusmn; 0.0667</td></tr>
+              <tr><td>GMSC</td><td>CTGAN</td><td>0.2933 &plusmn; 0.1950</td></tr>
+              <tr><td>GMSC</td><td>TVAE</td><td>0.6416 &plusmn; 0.1297</td></tr>
             </tbody>
           </table>
         </div>
@@ -298,46 +298,46 @@
           <table>
             <thead><tr><th>Dataset</th><th>Generator</th><th>Top-5 Jaccard</th><th>Top-10 Jaccard</th></tr></thead>
             <tbody>
-              <tr><td>German Credit</td><td>CTGAN</td><td>0.39</td><td>0.57</td></tr>
-              <tr><td>German Credit</td><td>TVAE</td><td>0.54</td><td>0.52</td></tr>
-              <tr><td>GMSC</td><td>CTGAN</td><td>0.43</td><td>1.00</td></tr>
-              <tr><td>GMSC</td><td>TVAE</td><td>0.62</td><td>1.00</td></tr>
+              <tr><td>German Credit</td><td>CTGAN</td><td>0.3988 &plusmn; 0.1198</td><td>0.5330 &plusmn; 0.0986</td></tr>
+              <tr><td>German Credit</td><td>TVAE</td><td>0.4881 &plusmn; 0.1597</td><td>0.5275 &plusmn; 0.0330</td></tr>
+              <tr><td>GMSC</td><td>CTGAN</td><td>0.4345 &plusmn; 0.0939</td><td>1.0000 &plusmn; 0.0000</td></tr>
+              <tr><td>GMSC</td><td>TVAE</td><td>0.6286 &plusmn; 0.1633</td><td>1.0000 &plusmn; 0.0000</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="figure">
           <img src="assets/german_credit_shap_consistency.png" alt="German Credit SHAP Consistency">
-          <div class="figure-caption"><strong>Figure:</strong> SHAP feature importance comparison â€” German Credit (Real vs CTGAN vs TVAE)</div>
+          <div class="figure-caption"><strong>Figure:</strong> SHAP feature importance comparison — German Credit (Real vs CTGAN vs TVAE)</div>
         </div>
         <div class="figure">
           <img src="assets/gmsc_shap_consistency.png" alt="GMSC SHAP Consistency">
-          <div class="figure-caption"><strong>Figure:</strong> SHAP feature importance comparison â€” GMSC (Real vs CTGAN vs TVAE)</div>
+          <div class="figure-caption"><strong>Figure:</strong> SHAP feature importance comparison — GMSC (Real vs CTGAN vs TVAE)</div>
         </div>
 
         <h3>SHAP Beeswarm Plots (Seed 42)</h3>
         <div class="comparison-grid">
           <div class="figure">
             <img src="assets/german_credit_real_shap_beeswarm.png" alt="German Real SHAP Beeswarm">
-            <div class="figure-caption"><strong>German Credit â€” Real</strong></div>
+            <div class="figure-caption"><strong>German Credit — Real</strong></div>
           </div>
           <div class="figure">
             <img src="assets/german_credit_ctgan_shap_beeswarm.png" alt="German CTGAN SHAP Beeswarm">
-            <div class="figure-caption"><strong>German Credit â€” CTGAN</strong></div>
+            <div class="figure-caption"><strong>German Credit — CTGAN</strong></div>
           </div>
         </div>
         <div class="comparison-grid">
           <div class="figure">
             <img src="assets/german_credit_tvae_shap_beeswarm.png" alt="German TVAE SHAP Beeswarm">
-            <div class="figure-caption"><strong>German Credit â€” TVAE</strong></div>
+            <div class="figure-caption"><strong>German Credit — TVAE</strong></div>
           </div>
           <div class="figure">
             <img src="assets/german_credit_shap_heatmap.png" alt="German SHAP Heatmap">
-            <div class="figure-caption"><strong>German Credit â€” SHAP Rank Heatmap</strong></div>
+            <div class="figure-caption"><strong>German Credit — SHAP Rank Heatmap</strong></div>
           </div>
         </div>
 
-        <p><strong>Critical insight â€” Utility-Explainability Decoupling:</strong> On GMSC, CTGAN and TVAE have nearly identical AUC (~0.78 vs ~0.79), but TVAE's SHAP rankings are <em>twice</em> as consistent (Ï = 0.57 vs 0.28). A bank using CTGAN would get correct predictions but <strong>wrong explanations</strong> â€” a compliance disaster.</p>
+        <p><strong>Critical insight — Utility-Explainability Decoupling:</strong> On GMSC, CTGAN and TVAE have nearly identical AUC (~0.78 vs ~0.79), but TVAE's SHAP rankings are <em>twice</em> as consistent (Ï = 0.57 vs 0.28). A bank using CTGAN would get correct predictions but <strong>wrong explanations</strong> — a compliance disaster.</p>
       </section>
 
       <!-- ===== SECTION 9: PRIVACY ===== -->
@@ -350,29 +350,29 @@
           <table>
             <thead><tr><th>Dataset</th><th>Generator</th><th>Mean DCR</th><th>Mean NNDR</th><th>MIA AUC</th></tr></thead>
             <tbody>
-              <tr><td>German Credit</td><td>CTGAN</td><td>3.4798 Â± 0.0514</td><td>0.9206 Â± 0.0023</td><td>0.4878 Â± 0.0099</td></tr>
-              <tr><td>German Credit</td><td>TVAE</td><td>2.0956 Â± 0.0325</td><td>0.8351 Â± 0.0116</td><td>0.5080 Â± 0.0221</td></tr>
-              <tr><td>GMSC</td><td>CTGAN</td><td>0.3245 Â± 0.0270</td><td>0.7740 Â± 0.0090</td><td>0.5051 Â± 0.0050</td></tr>
-              <tr><td>GMSC</td><td>TVAE</td><td>0.1589 Â± 0.0236</td><td>0.7158 Â± 0.0164</td><td>0.5034 Â± 0.0072</td></tr>
+              <tr><td>German Credit</td><td>CTGAN</td><td>3.4717 &plusmn; 0.0686</td><td>0.9220 &plusmn; 0.0030</td><td>0.4900 &plusmn; 0.0112</td></tr>
+              <tr><td>German Credit</td><td>TVAE</td><td>2.0845 &plusmn; 0.0435</td><td>0.8360 &plusmn; 0.0175</td><td>0.5054 &plusmn; 0.0215</td></tr>
+              <tr><td>GMSC</td><td>CTGAN</td><td>0.3414 &plusmn; 0.0329</td><td>0.7816 &plusmn; 0.0120</td><td>0.5051 &plusmn; 0.0043</td></tr>
+              <tr><td>GMSC</td><td>TVAE</td><td>0.1644 &plusmn; 0.0182</td><td>0.7191 &plusmn; 0.0125</td><td>0.5047 &plusmn; 0.0065</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="figure">
           <img src="assets/german_credit_utility_privacy_tradeoff.png" alt="German Credit Utility-Privacy Tradeoff">
-          <div class="figure-caption"><strong>Figure:</strong> Utility-Privacy tradeoff scatter â€” German Credit</div>
+          <div class="figure-caption"><strong>Figure:</strong> Utility-Privacy tradeoff scatter — German Credit</div>
         </div>
         <div class="figure">
           <img src="assets/gmsc_utility_privacy_tradeoff.png" alt="GMSC Utility-Privacy Tradeoff">
-          <div class="figure-caption"><strong>Figure:</strong> Utility-Privacy tradeoff scatter â€” GMSC</div>
+          <div class="figure-caption"><strong>Figure:</strong> Utility-Privacy tradeoff scatter — GMSC</div>
         </div>
 
         <div class="figure">
           <img src="assets/german_credit_mia_roc_curve.png" alt="German MIA ROC">
-          <div class="figure-caption"><strong>Figure:</strong> MIA ROC curves â€” German Credit (AUC â‰ˆ 0.50 = attacker guessing randomly)</div>
+          <div class="figure-caption"><strong>Figure:</strong> MIA ROC curves — German Credit (AUC ≈ 0.50 = attacker guessing randomly)</div>
         </div>
 
-        <p><strong>CTGAN always has higher DCR</strong> â€” its synthetic records are farther from real records. <strong>TVAE always has lower DCR/NNDR</strong> â€” good for utility, bad for privacy. <strong>MIA AUC â‰ˆ 0.50 for everyone</strong> â€” but this is misleading because MIA misses <em>local</em> memorization.</p>
+        <p><strong>CTGAN always has higher DCR</strong> — its synthetic records are farther from real records. <strong>TVAE always has lower DCR/NNDR</strong> — good for utility, bad for privacy. <strong>MIA AUC ≈ 0.50 for everyone</strong> — but this is misleading because MIA misses <em>local</em> memorization.</p>
       </section>
 
       <!-- ===== SECTION 10: INFERENCE RISK ===== -->
@@ -391,17 +391,17 @@
           <table>
             <thead><tr><th>Dataset</th><th>Generator</th><th>Inference Risk</th><th>Threshold (95th pct)</th><th>Status</th></tr></thead>
             <tbody>
-              <tr><td>German Credit</td><td>CTGAN</td><td><strong>0.2094 Â± 0.0144</strong></td><td>0.5010</td><td><span class="badge badge-pass">PASS</span></td></tr>
-              <tr><td>German Credit</td><td>TVAE</td><td><strong>0.6163 Â± 0.0236</strong></td><td>0.5010</td><td><span class="badge badge-fail">FAIL</span></td></tr>
-              <tr><td>GMSC</td><td>CTGAN</td><td><strong>0.4519 Â± 0.0094</strong></td><td>0.5571</td><td><span class="badge badge-pass">PASS</span></td></tr>
-              <tr><td>GMSC</td><td>TVAE</td><td><strong>0.5632 Â± 0.0202</strong></td><td>0.5571</td><td><span class="badge badge-fail">FAIL</span></td></tr>
+              <tr><td>German Credit</td><td>CTGAN</td><td><strong>0.2113 &plusmn; 0.0153</strong></td><td>0.5010</td><td><span class="badge badge-pass">PASS</span></td></tr>
+              <tr><td>German Credit</td><td>TVAE</td><td><strong>0.6383 &plusmn; 0.0367</strong></td><td>0.5010</td><td><span class="badge badge-fail">FAIL</span></td></tr>
+              <tr><td>GMSC</td><td>CTGAN</td><td><strong>0.4394 &plusmn; 0.0227</strong></td><td>0.5571</td><td><span class="badge badge-pass">PASS</span></td></tr>
+              <tr><td>GMSC</td><td>TVAE</td><td><strong>0.5540 &plusmn; 0.0176</strong></td><td>0.5571</td><td><span class="badge badge-fail">FAIL</span></td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="figure">
           <img src="assets/inference_risk_comparison.png" alt="Inference Risk Comparison">
-          <div class="figure-caption"><strong>Figure:</strong> Inference Risk comparison â€” CTGAN vs TVAE with baseline disclosure thresholds</div>
+          <div class="figure-caption"><strong>Figure:</strong> Inference Risk comparison — CTGAN vs TVAE with baseline disclosure thresholds</div>
         </div>
 
         <h3>Per-Seed Breakdown</h3>
@@ -417,6 +417,11 @@
                   <tr><td>456</td><td>0.1971</td><td>0.6114</td></tr>
                   <tr><td>789</td><td>0.2314</td><td>0.6400</td></tr>
                   <tr><td>1337</td><td>0.2057</td><td>0.6257</td></tr>
+                  <tr><td>2024</td><td>0.2214</td><td>0.6757</td></tr>
+                  <tr><td>7</td><td>0.1814</td><td>0.6014</td></tr>
+                  <tr><td>99</td><td>0.2200</td><td>0.7043</td></tr>
+                  <tr><td>314</td><td>0.2243</td><td>0.6500</td></tr>
+                  <tr><td>2718</td><td>0.2186</td><td>0.6700</td></tr>
                 </tbody>
               </table>
             </div>
@@ -432,13 +437,18 @@
                   <tr><td>456</td><td>0.4449</td><td>0.5404</td></tr>
                   <tr><td>789</td><td>0.4399</td><td>0.5659</td></tr>
                   <tr><td>1337</td><td>0.4491</td><td>0.5909</td></tr>
+                  <tr><td>2024</td><td>0.4284</td><td>0.5451</td></tr>
+                  <tr><td>7</td><td>0.3960</td><td>0.5424</td></tr>
+                  <tr><td>99</td><td>0.4451</td><td>0.5530</td></tr>
+                  <tr><td>314</td><td>0.4026</td><td>0.5497</td></tr>
+                  <tr><td>2718</td><td>0.4627</td><td>0.5336</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
 
-        <p><strong>TVAE exceeds CTGAN on every single seed</strong> â€” this is not a fluke. MIA missed this: MIA AUC â‰ˆ 0.50 for TVAE (looks private), but Inference Risk reveals the local memorization that MIA's global approach cannot detect.</p>
+        <p><strong>TVAE exceeds CTGAN on every single seed</strong> — this is not a fluke. MIA missed this: MIA AUC ≈ 0.50 for TVAE (looks private), but Inference Risk reveals the local memorization that MIA's global approach cannot detect.</p>
       </section>
 
       <!-- ===== SECTION 11: STATISTICS ===== -->
@@ -457,17 +467,21 @@
           <table>
             <thead><tr><th>Metric</th><th>Dataset</th><th>Wilcoxon p</th><th>Cohen's d</th><th>Interpretation</th></tr></thead>
             <tbody>
-              <tr><td><strong>Inference Risk</strong></td><td>German</td><td>0.0020</td><td><strong>14.41</strong></td><td>TVAE enormously higher risk</td></tr>
-              <tr><td><strong>Inference Risk</strong></td><td>GMSC</td><td>0.0020</td><td><strong>5.34</strong></td><td>TVAE much higher risk</td></tr>
-              <tr><td><strong>ROC-AUC</strong></td><td>German</td><td>0.0020</td><td><strong>3.68</strong></td><td>TVAE significantly higher utility</td></tr>
-              <tr><td><strong>DCR</strong></td><td>German</td><td>0.0625</td><td><strong>âˆ’30.66</strong></td><td>TVAE much lower spacing</td></tr>
-              <tr><td><strong>DCR</strong></td><td>GMSC</td><td>0.0625</td><td><strong>âˆ’8.75</strong></td><td>TVAE much lower spacing</td></tr>
-              <tr><td><strong>SHAP Ï</strong></td><td>GMSC</td><td>0.0020</td><td><strong>1.52</strong></td><td>TVAE significantly more consistent</td></tr>
+              <tr><td><strong>Inference Risk</strong></td><td>German Credit</td><td>0.0020</td><td><strong>14.41</strong></td><td>TVAE enormously higher risk (extremely large effect)</td></tr>
+              <tr><td><strong>Inference Risk</strong></td><td>GMSC</td><td>0.0020</td><td><strong>5.34</strong></td><td>TVAE much higher risk (large effect)</td></tr>
+              <tr><td><strong>ROC-AUC</strong></td><td>German Credit</td><td>0.0020</td><td><strong>3.68</strong></td><td>TVAE significantly higher utility (large effect)</td></tr>
+              <tr><td><strong>SHAP ρ</strong></td><td>GMSC</td><td>0.0020</td><td><strong>1.52</strong></td><td>TVAE significantly more consistent (large effect)</td></tr>
+              <tr><td><strong>SHAP ρ</strong></td><td>German Credit</td><td>0.4922</td><td>0.31</td><td>No significant difference (both similar)</td></tr>
+              <tr><td><strong>DCR</strong></td><td>German Credit</td><td>0.0020</td><td><strong>-28.56</strong></td><td>CTGAN much higher spacing (extremely large effect)</td></tr>
+              <tr><td><strong>DCR</strong></td><td>GMSC</td><td>0.0020</td><td><strong>-6.60</strong></td><td>CTGAN much higher spacing (large effect)</td></tr>
+              <tr><td><strong>NNDR</strong></td><td>German Credit</td><td>0.0020</td><td><strong>-4.87</strong></td><td>CTGAN much higher NNDR (large effect)</td></tr>
+              <tr><td><strong>MIA AUC</strong></td><td>German Credit</td><td>0.0840</td><td>0.74</td><td>Not significant (both near-random)</td></tr>
+              <tr><td><strong>MIA AUC</strong></td><td>GMSC</td><td>0.9219</td><td>-0.07</td><td>No difference (both near-random)</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p><strong>Effect size guide:</strong> |d| &lt; 0.2 = negligible, 0.2â€“0.5 = small, 0.5â€“0.8 = medium, &gt; 0.8 = large. Our values (6.32, 18.61, 30.66) are <em>extremely large</em> â€” the differences are unambiguous.</p>
+        <p><strong>Effect size guide:</strong> |d| &lt; 0.2 = negligible, 0.2â€“0.5 = small, 0.5â€“0.8 = medium, &gt; 0.8 = large. Our values (6.32, 18.61, 30.66) are <em>extremely large</em> — the differences are unambiguous.</p>
       </section>
 
       <!-- ===== SECTION 12: MASTER ===== -->
@@ -480,10 +494,10 @@
           <table>
             <thead><tr><th>Dataset</th><th>Generator</th><th>AUC</th><th>SHAP Ï</th><th>DCR</th><th>NNDR</th><th>MIA</th><th>IR Score</th><th>IR Status</th></tr></thead>
             <tbody>
-              <tr><td><strong>German</strong></td><td>CTGAN</td><td>0.4946</td><td>0.6072</td><td>3.4798</td><td>0.9206</td><td>0.4878</td><td>0.2094</td><td><span class="badge badge-pass">PASS</span></td></tr>
-              <tr><td><strong>German</strong></td><td>TVAE</td><td>0.6946</td><td>0.6224</td><td>2.0956</td><td>0.8351</td><td>0.5080</td><td>0.6163</td><td><span class="badge badge-fail">FAIL</span></td></tr>
-              <tr><td><strong>GMSC</strong></td><td>CTGAN</td><td>0.7778</td><td>0.2848</td><td>0.3245</td><td>0.7740</td><td>0.5051</td><td>0.4519</td><td><span class="badge badge-pass">PASS</span></td></tr>
-              <tr><td><strong>GMSC</strong></td><td>TVAE</td><td>0.7853</td><td>0.5661</td><td>0.1589</td><td>0.7158</td><td>0.5034</td><td>0.5632</td><td><span class="badge badge-fail">FAIL</span></td></tr>
+              <tr><td><strong>German</strong></td><td>CTGAN</td><td>0.4851</td><td>0.5501</td><td>3.4717</td><td>0.9220</td><td>0.4900</td><td>0.2113</td><td><span class="badge badge-pass">PASS</span></td></tr>
+              <tr><td><strong>German</strong></td><td>TVAE</td><td>0.6864</td><td>0.5961</td><td>2.0845</td><td>0.8360</td><td>0.5054</td><td>0.6383</td><td><span class="badge badge-fail">FAIL</span></td></tr>
+              <tr><td><strong>GMSC</strong></td><td>CTGAN</td><td>0.7850</td><td>0.2933</td><td>0.3414</td><td>0.7816</td><td>0.5051</td><td>0.4394</td><td><span class="badge badge-pass">PASS</span></td></tr>
+              <tr><td><strong>GMSC</strong></td><td>TVAE</td><td>0.7531</td><td>0.6416</td><td>0.1644</td><td>0.7191</td><td>0.5047</td><td>0.5540</td><td><span class="badge badge-fail">FAIL</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -499,26 +513,26 @@
 
         <div class="figure">
           <img src="assets/privacy_dashboard.png" alt="Privacy Dashboard">
-          <div class="figure-caption"><strong>Figure:</strong> Privacy Metrics Dashboard â€” DCR, NNDR, MIA AUC, and Inference Risk across both datasets</div>
+          <div class="figure-caption"><strong>Figure:</strong> Privacy Metrics Dashboard — DCR, NNDR, MIA AUC, and Inference Risk across both datasets</div>
         </div>
         <div class="comparison-grid">
           <div class="figure">
             <img src="assets/german_credit_privacy_boxplots.png" alt="German Privacy Boxplots">
-            <div class="figure-caption"><strong>German Credit</strong> â€” DCR boxplots</div>
+            <div class="figure-caption"><strong>German Credit</strong> — DCR boxplots</div>
           </div>
           <div class="figure">
             <img src="assets/gmsc_privacy_boxplots.png" alt="GMSC Privacy Boxplots">
-            <div class="figure-caption"><strong>GMSC</strong> â€” DCR boxplots</div>
+            <div class="figure-caption"><strong>GMSC</strong> — DCR boxplots</div>
           </div>
         </div>
         <div class="comparison-grid">
           <div class="figure">
             <img src="assets/gmsc_shap_heatmap.png" alt="GMSC SHAP Heatmap">
-            <div class="figure-caption"><strong>GMSC</strong> â€” SHAP rank heatmap across seeds</div>
+            <div class="figure-caption"><strong>GMSC</strong> — SHAP rank heatmap across seeds</div>
           </div>
           <div class="figure">
             <img src="assets/gmsc_mia_roc_curve.png" alt="GMSC MIA ROC">
-            <div class="figure-caption"><strong>GMSC</strong> â€” MIA ROC curves</div>
+            <div class="figure-caption"><strong>GMSC</strong> — MIA ROC curves</div>
           </div>
         </div>
       </section>
@@ -531,23 +545,23 @@
         </div>
 
         <div class="finding-card">
-          <h4>Finding 1: TVAE â€” Better Utility &amp; Explanations, But Leaks Privacy</h4>
+          <h4>Finding 1: TVAE — Better Utility &amp; Explanations, But Leaks Privacy</h4>
           <p>TVAE consistently produces synthetic data that trains better models and preserves SHAP feature rankings. However, it creates records <em>too close</em> to real individuals, making re-identification possible.</p>
         </div>
 
         <div class="finding-card">
-          <h4>Finding 2: CTGAN â€” Protects Privacy But Destroys Explanations</h4>
+          <h4>Finding 2: CTGAN — Protects Privacy But Destroys Explanations</h4>
           <p>CTGAN generates "fuzzy" synthetic records far from any real person (good privacy). But this fuzziness scrambles the data distribution enough that models explain themselves very differently.</p>
         </div>
 
         <div class="finding-card">
           <h4>Finding 3: Good Predictions â‰  Good Explanations</h4>
-          <p>On GMSC, CTGAN and TVAE have nearly identical AUC (~0.78 vs ~0.79). But TVAE's SHAP rankings are twice as consistent (Ï = 0.57 vs 0.28). A bank using CTGAN would get correct predictions but wrong explanations â€” a compliance disaster.</p>
+          <p>On GMSC, CTGAN and TVAE have nearly identical AUC (~0.78 vs ~0.79). But TVAE's SHAP rankings are twice as consistent (Ï = 0.57 vs 0.28). A bank using CTGAN would get correct predictions but wrong explanations — a compliance disaster.</p>
         </div>
 
         <div class="finding-card">
-          <h4>Finding 4: MIA Is Insufficient â€” Use Inference Risk</h4>
-          <p>MIA AUC â‰ˆ 0.50 for TVAE (looks private), but Inference Risk reveals 62% of TVAE's records are "suspiciously close" to real individuals. MIA's global distance approach misses local memorization.</p>
+          <h4>Finding 4: MIA Is Insufficient — Use Inference Risk</h4>
+          <p>MIA AUC ≈ 0.50 for TVAE (looks private), but Inference Risk reveals 62% of TVAE's records are "suspiciously close" to real individuals. MIA's global distance approach misses local memorization.</p>
         </div>
 
         <div class="finding-card">
