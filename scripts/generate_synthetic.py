@@ -56,6 +56,13 @@ def run_synthetic_pipeline(dataset_name):
     for seed in seeds:
         print(f"\n--- Processing Seed {seed} for {dataset_name} ---")
         
+        # Skip if both CTGAN and TVAE files already exist
+        ctgan_check = f"data/synthetic/{dataset_name}_ctgan_seed{seed}.csv"
+        tvae_check = f"data/synthetic/{dataset_name}_tvae_seed{seed}.csv"
+        if os.path.exists(ctgan_check) and os.path.exists(tvae_check):
+            print(f"  -> Skipping seed {seed}: both CTGAN and TVAE files already exist.")
+            continue
+        
         # 1. Reconstruct the exact raw training split for this seed
         train_df, _ = train_test_split(
             df,

@@ -111,16 +111,56 @@ def run_dataset_privacy_pipeline(dataset_name):
             print(f"TVAE synthetic file {tvae_csv_path} not found. Skipping seed {seed}.")
             
     # Save privacy summary to results
-    summary = {
-        "dataset": dataset_name,
-        "seeds": seeds,
-        "ctgan_runs": ctgan_runs,
-        "tvae_runs": tvae_runs
-    }
-    
     results_dir = "results/privacy/"
     os.makedirs(results_dir, exist_ok=True)
     summary_path = os.path.join(results_dir, f"{dataset_name}_privacy_summary.json")
+    
+    if os.path.exists(summary_path):
+        try:
+            with open(summary_path, 'r') as f:
+                existing_summary = json.load(f)
+            existing_seeds = existing_summary.get("seeds", [])
+            existing_ctgan = existing_summary.get("ctgan_runs", [])
+            existing_tvae = existing_summary.get("tvae_runs", [])
+            
+            new_seeds = [s for s in seeds if s not in existing_seeds]
+            existing_seeds.extend(new_seeds)
+            
+            # Map CTGAN runs by seed
+            ctgan_by_seed = {r["seed"]: r for r in existing_ctgan}
+            for r in ctgan_runs:
+                ctgan_by_seed[r["seed"]] = r
+            existing_ctgan = [ctgan_by_seed[s] for s in existing_seeds if s in ctgan_by_seed]
+            
+            # Map TVAE runs by seed
+            tvae_by_seed = {r["seed"]: r for r in existing_tvae}
+            for r in tvae_runs:
+                tvae_by_seed[r["seed"]] = r
+            existing_tvae = [tvae_by_seed[s] for s in existing_seeds if s in tvae_by_seed]
+            
+            summary = {
+                "dataset": dataset_name,
+                "seeds": existing_seeds,
+                "ctgan_runs": existing_ctgan,
+                "tvae_runs": existing_tvae
+            }
+            print(f"Appended results for new seeds: {new_seeds}")
+        except Exception as e:
+            print(f"Error loading existing summary, overwriting: {e}")
+            summary = {
+                "dataset": dataset_name,
+                "seeds": seeds,
+                "ctgan_runs": ctgan_runs,
+                "tvae_runs": tvae_runs
+            }
+    else:
+        summary = {
+            "dataset": dataset_name,
+            "seeds": seeds,
+            "ctgan_runs": ctgan_runs,
+            "tvae_runs": tvae_runs
+        }
+        
     with open(summary_path, 'w') as f:
         json.dump(summary, f, indent=2)
         

@@ -68,17 +68,52 @@ def run_baseline_pipeline(dataset_name):
         compute_shap_reference(model, X_test_seed, dataset_name, seed)
         
     # 4. Save aggregated baseline metrics summary
-    summary = {
-        "dataset": dataset_name,
-        "best_parameters": best_params,
-        "seeds": seeds,
-        "runs": all_metrics
-    }
-    
-    # Save individual run metrics
     results_dir = "results/baseline/"
     os.makedirs(results_dir, exist_ok=True)
     summary_path = os.path.join(results_dir, f"{dataset_name}_real_xgboost_summary.json")
+    
+    if os.path.exists(summary_path):
+        try:
+            with open(summary_path, 'r') as f:
+                existing_summary = json.load(f)
+            existing_seeds = existing_summary.get("seeds", [])
+            existing_runs = existing_summary.get("runs", [])
+            
+            # Combine without duplicates
+            new_seeds = [s for s in seeds if s not in existing_seeds]
+            existing_seeds.extend(new_seeds)
+            
+            # Map existing runs by seed
+            run_by_seed = {r["seed"]: r for r in existing_runs}
+            for run in all_metrics:
+                run_by_seed[run["seed"]] = run
+                
+            # Reconstruct list of runs in order of seeds
+            existing_runs = [run_by_seed[s] for s in existing_seeds if s in run_by_seed]
+            
+            summary = {
+                "dataset": dataset_name,
+                "best_parameters": existing_summary.get("best_parameters", best_params),
+                "seeds": existing_seeds,
+                "runs": existing_runs
+            }
+            print(f"Appended results for new seeds: {new_seeds}")
+        except Exception as e:
+            print(f"Error loading existing summary, overwriting: {e}")
+            summary = {
+                "dataset": dataset_name,
+                "best_parameters": best_params,
+                "seeds": seeds,
+                "runs": all_metrics
+            }
+    else:
+        summary = {
+            "dataset": dataset_name,
+            "best_parameters": best_params,
+            "seeds": seeds,
+            "runs": all_metrics
+        }
+    
     with open(summary_path, 'w') as f:
         json.dump(summary, f, indent=2)
         

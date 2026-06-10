@@ -148,7 +148,12 @@ def compute_cohen_d(x, y):
 # TASK 3: Multi-Seed Experiment Runner
 # ==========================================
 def run_experiments():
-    seeds = [42, 123, 456, 789, 1337]
+    seeds_path = "configs/seeds/seeds.json"
+    if os.path.exists(seeds_path):
+        with open(seeds_path, 'r') as f:
+            seeds = json.load(f)["seeds"]
+    else:
+        seeds = [42, 123, 456, 789, 1337]
     datasets = {
         "german_credit": {
             "name": "german_credit",
@@ -231,12 +236,51 @@ def run_experiments():
             else:
                 print(f"  TVAE file not found for seed {seed}")
                 
+        # Load existing scores if they exist
+        out_dir = "results/privacy/"
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, f"inference_risk_{suffix}.json")
+        
+        if os.path.exists(out_path):
+            try:
+                with open(out_path, 'r') as f:
+                    existing_data = json.load(f)
+                existing_seeds = existing_data.get("seeds", [42, 123, 456, 789, 1337])
+                existing_ctgan_scores = existing_data.get("ctgan", {}).get("scores_per_seed", [])
+                existing_tvae_scores = existing_data.get("tvae", {}).get("scores_per_seed", [])
+                
+                # Map to seeds
+                ctgan_score_by_seed = dict(zip(existing_seeds, existing_ctgan_scores))
+                tvae_score_by_seed = dict(zip(existing_seeds, existing_tvae_scores))
+                
+                # Update with new scores
+                for s, score in zip(seeds, ctgan_scores):
+                    ctgan_score_by_seed[s] = score
+                for s, score in zip(seeds, tvae_scores):
+                    tvae_score_by_seed[s] = score
+                    
+                # Reconstruct list of seeds
+                all_seeds = list(existing_seeds)
+                for s in seeds:
+                    if s not in all_seeds:
+                        all_seeds.append(s)
+                        
+                ctgan_scores = [ctgan_score_by_seed[s] for s in all_seeds if s in ctgan_score_by_seed]
+                tvae_scores = [tvae_score_by_seed[s] for s in all_seeds if s in tvae_score_by_seed]
+                seeds_list = all_seeds
+            except Exception as e:
+                print(f"Error loading existing inference risk: {e}")
+                seeds_list = list(seeds)
+        else:
+            seeds_list = list(seeds)
+            
         ctgan_mean = float(np.mean(ctgan_scores)) if ctgan_scores else 0.0
         ctgan_std = float(np.std(ctgan_scores)) if ctgan_scores else 0.0
         tvae_mean = float(np.mean(tvae_scores)) if tvae_scores else 0.0
         tvae_std = float(np.std(tvae_scores)) if tvae_scores else 0.0
         
         results[dataset_name] = {
+            "seeds": seeds_list,
             "ctgan": {
                 "scores_per_seed": ctgan_scores,
                 "mean": ctgan_mean,
@@ -253,10 +297,6 @@ def run_experiments():
             }
         }
         
-        # Save results JSON
-        out_dir = "results/privacy/"
-        os.makedirs(out_dir, exist_ok=True)
-        out_path = os.path.join(out_dir, f"inference_risk_{suffix}.json")
         with open(out_path, 'w') as f:
             json.dump(results[dataset_name], f, indent=2)
         print(f"Results successfully written to {out_path}")
