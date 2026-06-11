@@ -1,0 +1,18 @@
+{
+  "generator_type": "tvae_dp",
+  "parameters": {
+    "epochs": 300,
+    "batch_size": 500,
+    "compress_dims": [128, 128],
+    "decompress_dims": [128, 128],
+    "embedding_dim": 128,
+    "enforce_min_max_values": true,
+    "enforce_rounding": true,
+    "cuda": false
+  },
+  "dp_parameters": {
+    "epsilon_values": [1.0, 5.0, 10.0],
+    "delta": 1e-5,
+    "max_grad_norm": 1.0
+  }
+}
