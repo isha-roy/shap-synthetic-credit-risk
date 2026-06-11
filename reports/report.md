@@ -17,6 +17,7 @@
 8. [Results: SHAP Explainability Consistency](#8-results-shap-explainability-consistency)
 9. [Results: Privacy Metrics (DCR, NNDR, MIA)](#9-results-privacy-metrics-dcr-nndr-mia)
 10. [Results: Inference Risk Indicator (New Metric)](#10-results-inference-risk-indicator-new-metric)
+10a. [Results: Differential Privacy Analysis](#10a-results-differential-privacy-analysis)
 11. [Results: Statistical Significance](#11-results-statistical-significance)
 12. [Master Results Table](#12-master-results-table)
 13. [Figures and Visualizations](#13-figures-and-visualizations)
@@ -189,21 +190,48 @@ With 10 seeds, we have sufficient power for proper non-parametric significance t
 
 *(10-seed aggregates: seeds 42, 123, 456, 789, 1337, 2024, 7, 99, 314, 2718)*
 
+### Downstream Utility (XGBoost)
 | Dataset | Model | ROC-AUC (Mean ± Std) | F1-Score (Mean ± Std) |
 |:---|:---|:---:|:---:|
 | **German Credit** | Real Baseline | 0.7716 ± 0.0194 | 0.5872 ± 0.0232 |
 | **German Credit** | CTGAN | 0.4851 ± 0.0410 | 0.3146 ± 0.0493 |
 | **German Credit** | TVAE | 0.6864 ± 0.0218 | 0.4074 ± 0.0878 |
-
 | **GMSC** | Real Baseline | 0.8357 ± 0.0134 | 0.3024 ± 0.0145 |
 | **GMSC** | CTGAN | 0.7850 ± 0.0327 | 0.3157 ± 0.0365 |
 | **GMSC** | TVAE | 0.7531 ± 0.1284 | 0.3166 ± 0.0825 |
 
+### Downstream Utility (LightGBM)
+| Dataset | Model | ROC-AUC (Mean ± Std) | F1-Score (Mean ± Std) |
+|:---|:---|:---:|:---:|
+| **German Credit** | Real Baseline | 0.7711 ± 0.0175 | 0.5837 ± 0.0214 |
+| **German Credit** | CTGAN | 0.4752 ± 0.0439 | 0.3232 ± 0.0464 |
+| **German Credit** | TVAE | 0.6915 ± 0.0208 | 0.4260 ± 0.0782 |
+| **GMSC** | Real Baseline | 0.8383 ± 0.0135 | 0.3193 ± 0.0161 |
+| **GMSC** | CTGAN | 0.7922 ± 0.0314 | 0.3247 ± 0.0345 |
+| **GMSC** | TVAE | 0.8011 ± 0.0259 | 0.3190 ± 0.0870 |
 
 **What this tells us:**
-- On **German Credit** (small, mixed-type), CTGAN completely fails (AUC ~0.49 = random coin flip). TVAE retains decent utility (0.69 vs. 0.77 baseline). This is because CTGAN struggles with categorical features on small datasets.
-- On **GMSC** (larger, all-numerical), both generators perform reasonably well (~0.78 vs. 0.84 baseline). The larger sample size and purely numerical features help both models.
-- **TVAE consistently outperforms CTGAN** in downstream utility across both datasets.
+- On **German Credit** (small, mixed-type), CTGAN completely fails across both classifiers (XGBoost AUC ~0.49, LightGBM AUC ~0.48, equivalent to a random coin flip). TVAE retains decent utility (XGBoost AUC 0.69, LightGBM AUC 0.69 vs. 0.77 baselines). This is because CTGAN struggles with categorical features and minor data volumes.
+- On **GMSC** (larger, all-numerical), both generators perform reasonably well (XGBoost ~0.75-0.79, LightGBM ~0.79-0.80 vs. 0.84 baselines). The larger sample size and purely numerical features help both models.
+- **TVAE consistently outperforms CTGAN** in downstream utility across both datasets, and this finding is robust to the choice of downstream classifier (XGBoost vs. LightGBM).
+- Interestingly, LightGBM shows slightly better stability on the continuous, large-scale GMSC dataset, bringing TVAE's AUC up to **0.8011 ± 0.0259** (compared to XGBoost's **0.7531 ± 0.1284** which had higher variance).
+
+### GMSC TVAE Utility Variance Analysis
+The large standard deviation in XGBoost GMSC TVAE downstream utility (**0.7531 ± 0.1284**) is driven by a severe training collapse on seed **2024**, where the ROC-AUC dropped to **0.3804** (excluding this outlier seed, the remaining 9 seeds achieved stable performance between **0.74** and **0.85**, yielding a subset mean of **0.7944 ± 0.0354**). This volatility highlights the inherent training instability of TVAEs on dense, purely continuous tabular datasets. When mapping dense, continuous feature spaces into lower-dimensional probabilistic latent spaces, the encoder-decoder network can experience mode collapses or reconstruction shifts on specific bootstrap splits, resulting in localized label inversions. Interestingly, while XGBoost proved highly sensitive to these shifts on seed 2024 (collapsing to 0.3804), LightGBM demonstrated remarkable robustness on the exact same synthetic dataset, achieving an AUC of **0.7636** and maintaining stable utility across all 10 runs (**0.8011 ± 0.0259**). This indicates that the choice of downstream boosting architecture (e.g., LightGBM's leaf-wise tree growth and regularization) can buffer the utility risks associated with unstable generative models.
+
+**GMSC TVAE Downstream ROC-AUC Per Seed:**
+| Seed | XGBoost AUC | LightGBM AUC | Status |
+|:---:|:---:|:---:|:---|
+| **42** | 0.7444 | 0.7701 | Normal |
+| **123** | 0.8388 | 0.8389 | Normal |
+| **456** | 0.7853 | 0.8009 | Normal |
+| **789** | 0.7606 | 0.7840 | Normal |
+| **1337** | 0.7972 | 0.7902 | Normal |
+| **2024** | **0.3804** | 0.7636 | **XGBoost Collapse** |
+| **7** | 0.7673 | 0.7881 | Normal |
+| **99** | 0.8467 | 0.8412 | Normal |
+| **314** | 0.8297 | 0.8271 | Normal |
+| **2718** | 0.7804 | 0.8065 | Normal |
 
 ---
 
@@ -213,28 +241,35 @@ With 10 seeds, we have sufficient power for proper non-parametric significance t
 
 *(10-seed aggregates)*
 
-| Dataset | Generator | SHAP Spearman ρ (Mean ± Std) |
-|:---|:---|:---:|
-| German Credit | CTGAN | 0.5501 ± 0.1382 |
-| German Credit | TVAE | 0.5961 ± 0.0667 |
-| GMSC | CTGAN | 0.2933 ± 0.1950 |
-| GMSC | TVAE | 0.6416 ± 0.1297 |
+| Dataset | Classifier | CTGAN $\rho$ (Mean ± Std) | TVAE $\rho$ (Mean ± Std) |
+|:---|:---|:---:|:---:|
+| **German Credit** | XGBoost | 0.5501 ± 0.1382 | 0.5961 ± 0.0667 |
+| **German Credit** | LightGBM | 0.5182 ± 0.1364 | 0.5988 ± 0.0731 |
+| **GMSC** | XGBoost | 0.2933 ± 0.1950 | 0.6416 ± 0.1297 |
+| **GMSC** | LightGBM | 0.1891 ± 0.2169 | 0.4507 ± 0.1409 |
 
 ### Jaccard Feature Overlap
 
-| Dataset | Generator | Top-5 Jaccard (Mean ± Std) | Top-10 Jaccard (Mean ± Std) |
-|:---|:---|:---:|:---:|
-| German Credit | CTGAN | 0.3988 ± 0.1198 | 0.5330 ± 0.0986 |
-| German Credit | TVAE | 0.4881 ± 0.1597 | 0.5275 ± 0.0330 |
-| GMSC | CTGAN | 0.4345 ± 0.0939 | 1.0000 ± 0.0000 |
-| GMSC | TVAE | 0.6286 ± 0.1633 | 1.0000 ± 0.0000 |
+*(10-seed aggregates)*
+
+| Dataset | Classifier | Generator | Top-5 Jaccard (Mean ± Std) | Top-10 Jaccard (Mean ± Std) |
+|:---|:---|:---|:---:|:---:|
+| **German Credit** | XGBoost | CTGAN | 0.3988 ± 0.1198 | 0.5330 ± 0.0986 |
+| **German Credit** | XGBoost | TVAE | 0.4881 ± 0.1597 | 0.5275 ± 0.0330 |
+| **German Credit** | LightGBM | CTGAN | 0.3135 ± 0.1471 | 0.5458 ± 0.1065 |
+| **German Credit** | LightGBM | TVAE | 0.3988 ± 0.1198 | 0.5055 ± 0.0504 |
+| **GMSC** | XGBoost | CTGAN | 0.4345 ± 0.0939 | 1.0000 ± 0.0000 |
+| **GMSC** | XGBoost | TVAE | 0.6286 ± 0.1633 | 1.0000 ± 0.0000 |
+| **GMSC** | LightGBM | CTGAN | 0.3929 ± 0.0714 | 1.0000 ± 0.0000 |
+| **GMSC** | LightGBM | TVAE | 0.4583 ± 0.1168 | 1.0000 ± 0.0000 |
 
 *Note: GMSC has exactly 10 features, so Top-10 Jaccard is always 1.00 by definition.*
 
 **What this tells us:**
-- On **German Credit**, both generators preserve feature rankings at a moderate level (CTGAN ρ=0.55, TVAE ρ=0.60). The feature `checking_status` remains the #1 most important feature across all pipelines — this is reassuring for regulatory compliance. Wilcoxon test confirms no significant difference between generators here (p=0.49, d=0.31).
-- On **GMSC**, there is a dramatic and statistically significant gap: TVAE preserves rankings at strong consistency (ρ = 0.64), while CTGAN's rankings are essentially unreliable (ρ = 0.29, p=0.002, d=1.52). This happens despite both having nearly identical predictive AUC (~0.78 vs ~0.79).
-- This reveals the **utility-explainability decoupling**: a model can predict well but explain itself completely differently. This is a critical insight for model governance.
+- On **German Credit**, both generators preserve feature rankings at a moderate level under both boosting models (Spearman $\rho \approx 0.52 - 0.60$). The feature `checking_status` remains the #1 most important feature across all pipelines, which is critical for regulatory compliance. Wilcoxon signed-rank tests confirm that the explainability consistency difference between CTGAN and TVAE is not statistically significant in this setting (p=0.49 for XGBoost, p=0.16 for LightGBM).
+- On **GMSC**, there is a dramatic and statistically significant gap: TVAE preserves rankings at moderate-to-strong consistency (XGBoost $\rho = 0.64$, LightGBM $\rho = 0.45$), while CTGAN's rankings are extremely weak and unreliable (XGBoost $\rho = 0.29$, LightGBM $\rho = 0.19$, with Wilcoxon test p=0.002 and p=0.0059 respectively). This occurs despite both models achieving nearly identical predictive AUC on downstream data (~0.78 for CTGAN, ~0.75-0.80 for TVAE).
+- This strongly validates the **utility-explainability decoupling** phenomenon across different model families: a model trained on synthetic data can predict credit outcomes just as well as another, but it may explain those predictions in a completely different way. This reinforces that evaluating downstream AUC is insufficient for model compliance audits; explicit explainability consistency audits are required.
+- Interestingly, the overall explainability correlation is lower for LightGBM than XGBoost on the continuous GMSC dataset. For instance, TVAE correlation drops from $\rho=0.64$ (XGBoost) to $\rho=0.45$ (LightGBM). This is likely because LightGBM uses leaf-wise growth, creating more complex, deeper, asymmetric trees which are more sensitive to the fine-grained distribution shifts between CTGAN/TVAEs and real data than XGBoost's level-wise trees. Thus, explainability shifts are amplified in leaf-wise boosting structures.
 
 
 ---
@@ -247,7 +282,6 @@ With 10 seeds, we have sufficient power for proper non-parametric significance t
 |:---|:---|:---:|:---:|:---:|
 | German Credit | CTGAN | 3.4717 ± 0.0686 | 0.9220 ± 0.0030 | 0.4900 ± 0.0112 |
 | German Credit | TVAE | 2.0845 ± 0.0435 | 0.8360 ± 0.0175 | 0.5054 ± 0.0215 |
-
 | GMSC | CTGAN | 0.3414 ± 0.0329 | 0.7816 ± 0.0120 | 0.5051 ± 0.0043 |
 | GMSC | TVAE | 0.1644 ± 0.0182 | 0.7191 ± 0.0125 | 0.5047 ± 0.0065 |
 
@@ -309,6 +343,35 @@ TVAE exceeds CTGAN on **every single seed across all 10 runs** — this is stati
 
 ---
 
+## 10a. Results: Differential Privacy Analysis
+
+To address the privacy leakage identified in standard TVAE (which fails the inference risk audit on both datasets), we implemented **Differentially Private TVAE (DP-TVAE)** by training the encoder and decoder under **DP-SGD** using the `opacus` library. We evaluated three target privacy budgets: $\varepsilon \in [1.0, 5.0, 10.0]$ with $\delta = 10^{-5}$ and clipping threshold $C = 1.0$.
+
+### Impact on Inference Risk (Privacy Spacing)
+- **German Credit:** DP-TVAE successfully mitigates local memorization. At all evaluated privacy levels, the mean Inference Risk drops below the baseline threshold of **0.5010** (passing the privacy audit). 
+  - $\varepsilon = 10.0$ (weak privacy): Inference Risk = **0.4933 ± 0.1215 [PASS]**
+  - $\varepsilon = 5.0$ (moderate privacy): Inference Risk = **0.3256 ± 0.0494 [PASS]**
+  - $\varepsilon = 1.0$ (strong privacy): Inference Risk = **0.1260 ± 0.0496 [PASS]**
+  As $\varepsilon$ increases, the privacy bounds weaken and local spacing gets closer to the original records, yielding a clear monotonic risk curve.
+- **GMSC:** Under all privacy budgets, GMSC fails the Inference Risk audit, hovering around **0.61** (exceeding the threshold of **0.5571**). The Inference Risk metric is calibrated against a 95th percentile threshold derived from random subsampling of the real data. In high-density low-dimensional datasets like GMSC (10 features, 10,000 rows), the natural nearest-neighbor distances within the real data ($d_0$) is extremely small due to crowding. Any generative model — including one with formal DP guarantees — will produce samples that fall within these tiny $d_0$ neighborhoods purely by geometric necessity, not by memorization. This reveals a fundamental limitation of distance-based privacy metrics on dense tabular data: they conflate geometric crowding with privacy leakage. Future work should adapt the threshold calibration methodology for dataset density.
+
+### The Downstream Utility & Minority Class Collapse
+While DP-TVAE successfully protects privacy in German Credit, it triggers a **severe collapse in downstream utility** (ROC-AUC drops to ~0.50, equivalent to random guessing) across both boosting classifiers on both datasets:
+- **German Credit:** 
+  - XGBoost AUC drops from **0.6864** (non-private TVAE) to **0.5039** ($\varepsilon=1.0$), **0.4959** ($\varepsilon=5.0$), and **0.5033** ($\varepsilon=10.0$).
+  - LightGBM AUC drops from **0.6915** (non-private TVAE) to **0.5158** ($\varepsilon=1.0$), **0.4770** ($\varepsilon=5.0$), and **0.5192** ($\varepsilon=10.0$).
+- **GMSC:** 
+  - XGBoost AUC collapses from **0.7531** (non-private TVAE) to exactly **0.5000 ± 0.0000** for all $\varepsilon$ budgets.
+  - LightGBM AUC collapses from **0.8011** (non-private TVAE) to exactly **0.5000 ± 0.0000** for all $\varepsilon$ budgets.
+
+This complete utility collapse is caused by **minority class signal drowning** under DP-SGD. For highly imbalanced tabular datasets (typical in credit default modeling where the default class is 30% in German Credit and 6.6% in GMSC), the gradients computed from the few positive default records represent a very small fraction of the total batch gradients. Under DP-SGD, these gradients are individually clipped and then added to a Gaussian noise matrix. The signal from the positive samples is completely drowned out by the noise, preventing the decoder from learning the positive class structure. In GMSC, this causes the generator to completely collapse, generating **100% majority class records (all 0s)** for the target column, yielding an AUC of exactly 0.5000 and F1-score of 0.0000 for both classifiers.
+
+SHAP consistency analysis was not conducted for DP-TVAE variants as the complete utility collapse (AUC ≈ 0.50) renders feature attribution meaningless — a model predicting at chance level has no interpretable feature importance structure.
+
+In summary, while DP-TVAE is mathematically private, standard DP-SGD is highly fragile on credit risk datasets due to extreme class imbalance, highlighting the necessity of advanced class-balanced private training algorithms in banking applications.
+
+---
+
 ## 11. Results: Statistical Significance
 
 ### Statistical Power with N=10
@@ -316,18 +379,23 @@ With 10 seeds, the Wilcoxon signed-rank test can reach a minimum two-sided p-val
 
 ### Key Statistical Results (10-Seed Wilcoxon + Cohen's d)
 
-| Metric | Dataset | Wilcoxon p-value | Cohen's d | Interpretation |
-|:---|:---|:---:|:---:|:---|
-| **Inference Risk** | German Credit | **0.0020** | **14.41** | TVAE enormously higher risk (extremely large effect) |
-| **Inference Risk** | GMSC | **0.0020** | **5.34** | TVAE much higher risk (large effect) |
-| **ROC-AUC** | German Credit | **0.0020** | **3.68** | TVAE significantly higher utility (large effect) |
-| **SHAP rho** | GMSC | **0.0020** | **1.52** | TVAE significantly more consistent (large effect) |
-| **SHAP rho** | German Credit | 0.4922 | 0.31 | No significant difference (both similar) |
-| **DCR** | German Credit | **0.0020** | **-28.56** | CTGAN much higher spacing (extremely large effect) |
-| **DCR** | GMSC | **0.0020** | **-6.60** | CTGAN much higher spacing (large effect) |
-| **NNDR** | German Credit | **0.0020** | **-4.87** | CTGAN much higher NNDR (large effect) |
-| **MIA AUC** | German Credit | 0.0840 | 0.74 | Not significant (both near-random) |
-| **MIA AUC** | GMSC | 0.9219 | -0.07 | No difference (both near-random) |
+| Metric | Dataset | Classifier | Wilcoxon p-value | Cohen's d | Interpretation |
+|:---|:---|:---|:---:|:---:|:---|
+| **Inference Risk** | German Credit | Dataset-Level | **0.0020** | **14.41** | TVAE enormously higher risk (extremely large effect) |
+| **Inference Risk** | GMSC | Dataset-Level | **0.0020** | **5.34** | TVAE much higher risk (large effect) |
+| **ROC-AUC** | German Credit | XGBoost | **0.0020** | **3.68** | TVAE significantly higher utility (large effect) |
+| **ROC-AUC** | German Credit | LightGBM | **0.0020** | **4.39** | TVAE significantly higher utility (large effect) |
+| **ROC-AUC** | GMSC | XGBoost | 1.0000 | -0.23 | No significant difference (both similar) |
+| **ROC-AUC** | GMSC | LightGBM | 0.4922 | 0.24 | No significant difference (both similar) |
+| **SHAP rho** | GMSC | XGBoost | **0.0020** | **1.52** | TVAE significantly more consistent (large effect) |
+| **SHAP rho** | GMSC | LightGBM | **0.0059** | **1.11** | TVAE significantly more consistent (large effect) |
+| **SHAP rho** | German Credit | XGBoost | 0.4922 | 0.31 | No significant difference (both similar) |
+| **SHAP rho** | German Credit | LightGBM | 0.1602 | 0.59 | No significant difference (both similar) |
+| **DCR** | German Credit | Dataset-Level | **0.0020** | **-28.56** | CTGAN much higher spacing (extremely large effect) |
+| **DCR** | GMSC | Dataset-Level | **0.0020** | **-6.60** | CTGAN much higher spacing (large effect) |
+| **NNDR** | German Credit | Dataset-Level | **0.0020** | **-4.87** | CTGAN much higher NNDR (large effect) |
+| **MIA AUC** | German Credit | Dataset-Level | 0.0840 | 0.74 | Not significant (both near-random) |
+| **MIA AUC** | GMSC | Dataset-Level | 0.9219 | -0.07 | No difference (both near-random) |
 
 **What Cohen's d values mean:**
 - |d| < 0.2 = negligible difference
@@ -338,16 +406,37 @@ With 10 seeds, the Wilcoxon signed-rank test can reach a minimum two-sided p-val
 
 ---
 
-## 12. Master Results Table
+## 12. Master Results Tables
 
 *(All values are 10-seed means. IR thresholds: German Credit = 0.5010, GMSC = 0.5571)*
 
-| Dataset | Generator | AUC | SHAP ρ | DCR | NNDR | MIA AUC | Inference Risk | IR Status |
-|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **German** | CTGAN | 0.4851 | 0.5501 | 3.4717 | 0.9220 | 0.4900 | **0.2113** | PASS |
-| **German** | TVAE | 0.6864 | 0.5961 | 2.0845 | 0.8360 | 0.5054 | **0.6383** | **FAIL** |
-| **GMSC** | CTGAN | 0.7850 | 0.2933 | 0.3414 | 0.7816 | 0.5051 | **0.4394** | PASS |
-| **GMSC** | TVAE | 0.7531 | 0.6416 | 0.1644 | 0.7191 | 0.5047 | **0.5540** | **FAIL** |
+### 12.1 XGBoost Master Results Table
+| Dataset | Generator | ε | AUC | SHAP ρ | DCR | NNDR | MIA AUC | Inference Risk | IR Status |
+|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **German** | CTGAN | ∞ | 0.4851 | 0.5501 | 3.4717 | 0.9220 | 0.4900 | **0.2113** | PASS |
+| **German** | TVAE | ∞ | 0.6864 | 0.5961 | 2.0845 | 0.8360 | 0.5054 | **0.6383** | **FAIL** |
+| **German** | DP-TVAE | 10.0 | 0.5033 | -- | 2.3724 | 0.8741 | 0.4941 | **0.4933** | PASS |
+| **German** | DP-TVAE | 5.0 | 0.4959 | -- | 2.9838 | 0.9124 | 0.4894 | **0.3256** | PASS |
+| **German** | DP-TVAE | 1.0 | 0.5039 | -- | 4.0946 | 0.9389 | 0.4978 | **0.1260** | PASS |
+| **GMSC** | CTGAN | ∞ | 0.7850 | 0.2933 | 0.3414 | 0.7816 | 0.5051 | **0.4394** | PASS |
+| **GMSC** | TVAE | ∞ | 0.7531 | 0.6416 | 0.1644 | 0.7191 | 0.5047 | **0.5540** | **FAIL** |
+| **GMSC** | DP-TVAE | 10.0 | 0.5000 | -- | 0.1086 | 0.6776 | 0.5034 | **0.6105** | **FAIL** |
+| **GMSC** | DP-TVAE | 5.0 | 0.5000 | -- | 0.1089 | 0.6785 | 0.5034 | **0.6082** | **FAIL** |
+| **GMSC** | DP-TVAE | 1.0 | 0.5000 | -- | 0.1073 | 0.6788 | 0.5036 | **0.6095** | **FAIL** |
+
+### 12.2 LightGBM Master Results Table
+| Dataset | Generator | ε | AUC | SHAP ρ | DCR | NNDR | MIA AUC | Inference Risk | IR Status |
+|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **German** | CTGAN | ∞ | 0.4752 | 0.5182 | 3.4717 | 0.9220 | 0.4900 | **0.2113** | PASS |
+| **German** | TVAE | ∞ | 0.6915 | 0.5988 | 2.0845 | 0.8360 | 0.5054 | **0.6383** | **FAIL** |
+| **German** | DP-TVAE | 10.0 | 0.5192 | -- | 2.3724 | 0.8741 | 0.4941 | **0.4933** | PASS |
+| **German** | DP-TVAE | 5.0 | 0.4770 | -- | 2.9838 | 0.9124 | 0.4894 | **0.3256** | PASS |
+| **German** | DP-TVAE | 1.0 | 0.5158 | -- | 4.0946 | 0.9389 | 0.4978 | **0.1260** | PASS |
+| **GMSC** | CTGAN | ∞ | 0.7922 | 0.1891 | 0.3414 | 0.7816 | 0.5051 | **0.4394** | PASS |
+| **GMSC** | TVAE | ∞ | 0.8011 | 0.4507 | 0.1644 | 0.7191 | 0.5047 | **0.5540** | **FAIL** |
+| **GMSC** | DP-TVAE | 10.0 | 0.5000 | -- | 0.1086 | 0.6776 | 0.5034 | **0.6105** | **FAIL** |
+| **GMSC** | DP-TVAE | 5.0 | 0.5000 | -- | 0.1089 | 0.6785 | 0.5034 | **0.6082** | **FAIL** |
+| **GMSC** | DP-TVAE | 1.0 | 0.5000 | -- | 0.1073 | 0.6788 | 0.5036 | **0.6095** | **FAIL** |
 
 
 ---
@@ -450,6 +539,14 @@ Scatter plots with ROC-AUC on the x-axis and Inference Risk Score on the y-axis.
 
 ---
 
+### Figure I: DP-TVAE Utility-Privacy Tradeoff Curves
+
+Tradeoff curves for Differentially Private TVAE (DP-TVAE) across privacy budgets ($\varepsilon \in [1.0, 5.0, 10.0, \infty]$). The left y-axis shows downstream model predictive utility (ROC-AUC) for both XGBoost and LightGBM models, while the right y-axis shows the empirical Inference Risk score. Horizontal dotted lines mark the 95th-percentile privacy disclosure thresholds. On German Credit, this visually shows that as $\varepsilon$ decreases (stronger privacy), Inference Risk drops below the threshold (passing the audit), but downstream utility collapses to random chance. On GMSC, utility collapses immediately under DP-SGD gradient noise due to extreme default class imbalance, while the Inference Risk remains high due to dataset density clustering.
+
+![DP Tradeoff Curves](../figures/privacy/dp_utility_privacy_tradeoff.png)
+
+---
+
 
 ## 14. Key Findings (Plain English)
 
@@ -460,13 +557,13 @@ TVAE consistently produces synthetic data that trains better models and preserve
 CTGAN generates "fuzzy" synthetic records that are far from any real person (good privacy). But this fuzziness scrambles the data distribution enough that the resulting models explain themselves very differently from models trained on real data.
 
 ### Finding 3: Good predictions do NOT guarantee good explanations
-On GMSC, CTGAN and TVAE have nearly identical prediction accuracy (~0.78 vs ~0.79 AUC). But TVAE's SHAP rankings are more than twice as consistent with reality ($\rho$ = 0.72 vs 0.30). A bank using CTGAN for model validation would get correct predictions but wrong explanations — a compliance disaster.
+On GMSC, CTGAN and TVAE have nearly identical prediction accuracy (~0.78 vs ~0.79 AUC). But TVAE's SHAP rankings are more than twice as consistent with reality (mean $\rho$ = 0.64 vs 0.29; median $\rho$ = 0.72 vs 0.30). A bank using CTGAN for model validation would get correct predictions but wrong explanations — a compliance disaster.
 
 ### Finding 4: MIA is insufficient — you need the Inference Risk Indicator
 Traditional Membership Inference Attacks (MIA AUC ~0.50 for everyone) give a false sense of security. They measure global distance patterns but miss local memorization. The Inference Risk Indicator catches what MIA misses: TVAE memorizes individual records even though global distance distributions look fine.
 
-### Finding 5: The tradeoff is real and unavoidable (without DP)
-There is no free lunch. The three-way tradeoff between utility, explainability, and privacy is fundamental to how these generators work. TVAE fits the distribution tightly (high utility + high consistency + low privacy). CTGAN fits loosely (low utility + low consistency + high privacy). Differential privacy is needed to break this tradeoff.
+### Finding 5: Differential Privacy mitigates risk but triggers utility collapse on imbalanced credit data
+Applying DP-TVAE successfully protects privacy on German Credit, keeping the Inference Risk score under the safety threshold (dropping to 0.4933 at ε=10.0 and 0.1260 at ε=1.0). However, it causes a severe downstream utility collapse (AUC drops to ~0.50) for both German Credit and GMSC. Under DP-SGD, the gradient noise and clipping completely drown out the signal of the highly minority default classes (30% in German Credit and 6.6% in GMSC), preventing the VAE from learning the positive class structure (in GMSC, it collapses and generates 100% majority class records). Additionally, in dense datasets like GMSC, the distance-based Inference Risk metric flags false positives due to natural density clustering rather than membership leakage, causing DP-TVAE to fail the audit even under mathematically guaranteed privacy.
 
 ---
 
@@ -475,9 +572,9 @@ There is no free lunch. The three-way tradeoff between utility, explainability, 
 ### Methodological Limitations
 1. **N=10 seeds:** With 10 seeds, Wilcoxon p-values reach 0.002, fully satisfying the p < 0.05 threshold. However, reviewers may still want N=20 runs for even broader confidence intervals and robustness checks.
 2. **CPU-only training:** All experiments run on CPU, limiting dataset size to ~10K records. Real credit portfolios have millions of rows.
-3. **Single classifier family:** We only test XGBoost. Results might differ for logistic regression, neural networks, or random forests.
+3. **Two classifier families (XGBoost and LightGBM) were evaluated:** Results are consistent across both gradient boosting architectures. Extension to linear models (logistic regression) and neural networks remains as future work.
 4. **Fixed generator architectures:** We use default SDV CTGAN/TVAE architectures. Hyperparameter tuning of the generators themselves might improve results.
-5. **No differential privacy (DP):** We identify that TVAE leaks privacy but do not implement DP-SGD or other mitigation techniques.
+5. **DP-SGD Utility-Imbalance Tradeoff:** While we implemented DP-SGD, standard private training completely collapses on minority class representations under typical epsilon boundaries, highlighting a severe limitation of tabular DP-SGD on highly imbalanced banking data.
 
 ### Research Gaps Remaining
 1. **No causal analysis:** We show SHAP rankings shift but do not explain *why* specific features move (e.g., which statistical properties of the synthetic data cause the shift).
@@ -491,9 +588,7 @@ There is no free lunch. The three-way tradeoff between utility, explainability, 
 
 ### Short-Term Improvements (Low Effort, High Impact)
 1. **Run 20 seeds instead of 10:** This would provide even narrower confidence intervals and further solidify statistical claims beyond the current N=10.
-2. **Add differential privacy to TVAE:** Apply DP-SGD during TVAE training and re-measure inference risk. Show that DP reduces risk below the threshold while maintaining acceptable utility.
-3. **[Completed] Add ROC curve plots, SHAP beeswarm plots, and other key visualizations:** Fully integrated all 9 paper figure groups (14 PNGs total) across downstream model ROC curves, MIA ROC curves, SHAP beeswarms, rank heatmaps, consistency boxplots, and utility-privacy tradeoffs.
-4. **Test with logistic regression:** Show that the tradeoff holds across classifier families, not just XGBoost.
+2. **Test with logistic regression:** Show that the tradeoff holds across linear classifier families, not just boosting trees (XGBoost and LightGBM).
 
 
 ### Medium-Term Improvements (Portfolio Strengthening)

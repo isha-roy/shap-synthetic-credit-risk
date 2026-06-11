@@ -277,3 +277,10 @@ logs/evaluation/*
 logs/errors/*
 !logs/errors/.gitkeep
 
+# Ignore DP-TVAE models, results, scratch space, and temporary folders
+models/tvae_dp*/
+results/tvae_dp_eps*/
+scratch/
+MD FILES/
+
+
