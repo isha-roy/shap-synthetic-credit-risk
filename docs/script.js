@@ -38,14 +38,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.section').forEach(s => revealObserver.observe(s));
 
-  // --- Mobile TOC Toggle ---
+  // --- TOC Toggle (Desktop & Mobile) ---
   const tocToggle = document.querySelector('.toc-toggle');
   const tocSidebar = document.querySelector('.toc-sidebar');
+  const bodyEl = document.body;
 
   if (tocToggle && tocSidebar) {
+    // Set initial text content based on window size
+    if (window.innerWidth > 768) {
+      tocToggle.textContent = '✕';
+    } else {
+      tocToggle.textContent = '☰';
+    }
+
     tocToggle.addEventListener('click', () => {
-      tocSidebar.classList.toggle('open');
-      tocToggle.textContent = tocSidebar.classList.contains('open') ? '✕' : '☰';
+      if (window.innerWidth > 768) {
+        bodyEl.classList.toggle('sidebar-collapsed');
+        tocToggle.textContent = bodyEl.classList.contains('sidebar-collapsed') ? '☰' : '✕';
+      } else {
+        tocSidebar.classList.toggle('open');
+        tocToggle.textContent = tocSidebar.classList.contains('open') ? '✕' : '☰';
+      }
     });
 
     // Close TOC on link click (mobile)
@@ -56,6 +69,24 @@ document.addEventListener('DOMContentLoaded', () => {
           tocToggle.textContent = '☰';
         }
       });
+    });
+
+    // Handle window resize resets
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) {
+        tocSidebar.classList.remove('open');
+        if (bodyEl.classList.contains('sidebar-collapsed')) {
+          tocToggle.textContent = '☰';
+        } else {
+          tocToggle.textContent = '✕';
+        }
+      } else {
+        if (tocSidebar.classList.contains('open')) {
+          tocToggle.textContent = '✕';
+        } else {
+          tocToggle.textContent = '☰';
+        }
+      }
     });
   }
 
