@@ -155,7 +155,7 @@ SHAP consistency analysis was not conducted for DP-TVAE variants as the complete
 ### 5.2.1 GMSC TVAE Utility Variance Analysis
 The large standard deviation in XGBoost GMSC TVAE downstream utility ($0.7531 \pm 0.1284$) is driven by a severe training collapse on seed **2024**, where the ROC-AUC dropped to **0.3804**. Excluding this outlier seed, the remaining 9 seeds achieved stable performance between 0.74 and 0.85, yielding a subset mean of $0.7944 \pm 0.0354$. This volatility highlights the inherent training instability of TVAEs on dense, purely continuous tabular datasets. When mapping dense, continuous feature spaces into lower-dimensional probabilistic latent spaces, the encoder-decoder network can experience mode collapses or reconstruction shifts on specific bootstrap splits, resulting in localized label inversions. 
 
-Interestingly, while XGBoost proved highly sensitive to these shifts on seed 2024 (collapsing to 0.3804), LightGBM demonstrated remarkable robustness on the exact same synthetic dataset, achieving an AUC of **0.7636** and maintaining stable utility across all 10 runs ($0.8011 \pm 0.0259$). This indicates that the choice of downstream boosting architecture (e.g., LightGBM's leaf-wise tree growth and regularization) can buffer the utility risks associated with unstable generative models.
+Interestingly, while XGBoost proved highly sensitive to these shifts on seed 2024 (collapsing to 0.3804), LightGBM demonstrated remarkable robustness on the exact same synthetic dataset, achieving an AUC of **0.7636** and maintaining stable utility across all 10 runs ($0.8011 \pm 0.0259$). This indicates that the choice of downstream boosting architecture (e.g., LightGBM's leaf-wise tree growth and regularization) can buffer the utility risks associated with unstable generative models, demonstrating its resilience to VAE mode collapse.
 
 **Table 2a: GMSC TVAE Downstream ROC-AUC Per Seed**
 | Seed | XGBoost AUC | LightGBM AUC | Status |
@@ -170,6 +170,10 @@ Interestingly, while XGBoost proved highly sensitive to these shifts on seed 202
 | **99** | 0.8467 | 0.8412 | Normal |
 | **314** | 0.8297 | 0.8271 | Normal |
 | **2718** | 0.7804 | 0.8065 | Normal |
+
+![FIG. 1. ROC curves for Real Baseline, CTGAN-trained, and TVAE-trained classifiers on the real test set. (a) German Credit XGBoost. (b) German Credit LightGBM. (c) GMSC XGBoost. (d) GMSC LightGBM.](../../figures/paper/roc_curves_combined.png)
+
+![FIG. 2. SHAP beeswarm plots comparing Real Baseline, CTGAN-trained, and TVAE-trained XGBoost models on the real test set. (a)–(c) German Credit. (d)–(f) GMSC.](../../figures/paper/shap_beeswarm_combined.png)
 
 ### 5.3 Fidelity and Privacy Spacing
 Table 3 compiles SHAP explanation consistency and privacy metrics.
@@ -200,15 +204,29 @@ Table 3 compiles SHAP explanation consistency and privacy metrics.
 
 In both datasets, a clear boundary is visible. TVAE produces records that lie much closer to the real records (lower DCR and NNDR values), allowing downstream models to replicate the real distribution and feature importances. However, this proximity represents a higher risk of record leakage, as confirmed by standard TVAE failing the Inference Risk audit. Conversely, CTGAN produces records with higher DCR and NNDR values, establishing a larger privacy margin at the cost of utility. 
 
-Applying DP-TVAE on German Credit successfully mitigates local memorization: at all epsilon values, Inference Risk drops below the baseline threshold of 0.5010 (e.g., 0.3256 at $\varepsilon=5.0$), passing the privacy audit. However, GMSC fails the Inference Risk audit even under mathematical DP guarantees. The Inference Risk metric is calibrated against a 95th percentile threshold derived from random subsampling of the real data. In high-density low-dimensional datasets like GMSC (10 features, 10,000 rows), the natural nearest-neighbor distances within the real data ($d_0$) are extremely small due to crowding. Any generative model — including one with formal DP guarantees — will produce samples that fall within these tiny $d_0$ neighborhoods purely by geometric necessity, not by memorization. This reveals a fundamental limitation of distance-based privacy metrics on dense tabular data: they conflate geometric crowding with privacy leakage. Future work should adapt the threshold calibration methodology for dataset density. These tradeoffs are visually illustrated in the DP-TVAE Tradeoff Curves (Fig. 9).
+Applying DP-TVAE on German Credit successfully mitigates local memorization: at all epsilon values, Inference Risk drops below the baseline threshold of 0.5010 (e.g., 0.3256 at $\varepsilon=5.0$), passing the privacy audit. However, GMSC fails the Inference Risk audit even under mathematical DP guarantees. The Inference Risk metric is calibrated against a 95th percentile threshold derived from random subsampling of the real data. In high-density low-dimensional datasets like GMSC (10 features, 10,000 rows), the natural nearest-neighbor distances within the real data ($d_0$) are extremely small due to crowding. Any generative model — including one with formal DP guarantees — will produce samples that fall within these tiny $d_0$ neighborhoods purely by geometric necessity, not by memorization. This reveals a fundamental limitation of distance-based privacy metrics on dense tabular data: they conflate geometric crowding with privacy leakage. Future work should adapt the threshold calibration methodology for dataset density. These tradeoffs are visually illustrated in the DP-TVAE Tradeoff Curves (Fig. 8).
+
+![FIG. 5. Inference Risk bar chart for CTGAN and TVAE on both datasets. Error bars indicate 1 SD across 10 seeds. Dashed horizontal lines mark the 95th-percentile thresholds. Bars exceeding the threshold are highlighted.](../../figures/privacy/inference_risk_comparison.png)
+
+![FIG. 7. Utility-Privacy tradeoff scatter: ROC-AUC (x-axis) vs. Inference Risk Score (y-axis), one point per seed. Dashed lines mark privacy thresholds. (a) German Credit. (b) GMSC.](../../figures/paper/utility_privacy_scatter.png)
+
+![FIG. 8. DP-TVAE utility-privacy tradeoff curves across ε ∈ {1.0, 5.0, 10.0, ∞}. Left y-axis: downstream ROC-AUC (XGBoost and LightGBM). Right y-axis: Inference Risk Score. Dotted horizontal lines: privacy thresholds. (a) German Credit. (b) GMSC.](../../figures/privacy/dp_utility_privacy_tradeoff.png)
 
 ### 5.4 SHAP Consistency Analysis
 For GMSC, although CTGAN and TVAE have comparable predictive utility (0.78 vs. 0.79 AUC under LightGBM), their explainability consistency differs dramatically. TVAE maintains moderate ranking consistency ($\rho \approx 0.45-0.64$), whereas CTGAN attributions diverge significantly ($\rho \approx 0.19-0.29$, weak consistency). This provides empirical proof of the decoupling of downstream classification utility and explanation fidelity.
 
 Features rank heatmap shows feature position shifts across Real, CTGAN, and TVAE. For GMSC, features like `RevolvingUtilizationOfUnsecuredLines` and `DebtRatio` remain highly ranked across all models, but mid-ranked features show severe position swaps in CTGAN. For German Credit, the top feature `checking_status` is preserved as the most important across all pipelines.
 
+![FIG. 3a. SHAP feature rank position comparison heatmap for German Credit.](../../figures/paper/shap_heatmap_german.png)
+
+![FIG. 3b. SHAP feature rank position comparison heatmap for GMSC.](../../figures/paper/gmsc.png)
+
+![FIG. 4. SHAP consistency boxplot of Spearman rank correlation rho across 10 seeds.](../../figures/paper/shap_consistency_boxplots.png)
+
 ### 5.5 ROC Curves and MIA Evaluations
 In all settings, the Membership Inference Attack (MIA) ROC curve hovers near the diagonal baseline (AUC $\approx 0.50$). This indicates that distance-based MIA cannot distinguish between members and non-members, confirming that neither generator is highly vulnerable to identity leakage through simple distance queries.
+
+![FIG. 6. Membership Inference Attack ROC curves (all pipelines). All curves remain near the diagonal, confirming MIA AUC ≈ 0.50 for both generators.](../../figures/paper/mia_roc_curves.png)
 
 ### 5.6 Statistical Rigor Analysis
 With $N=10$ seeds, Wilcoxon signed-rank tests compare TVAE and CTGAN performance.
